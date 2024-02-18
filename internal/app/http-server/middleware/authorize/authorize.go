@@ -31,7 +31,7 @@ func New(log *logger.Logger, service UserAuthorizer) func(next http.Handler) htt
 			defer cancel()
 
 			reqID := middleware.GetReqID(ctx)
-			ctx = context.WithValue(ctx, contexter.RequestId, reqID)
+			ctx = context.WithValue(ctx, contexter.RequestID, reqID)
 			log = log.With(
 				log.StringField("op", op),
 				log.StringField("request_id", reqID),

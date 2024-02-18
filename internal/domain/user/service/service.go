@@ -42,7 +42,7 @@ func (s *UserService) Register(ctx context.Context, login, password string) (str
 	const op = "domain.services.UserService.Registration"
 	log := s.logger.With(
 		s.logger.StringField("op", op),
-		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
+		s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
 	)
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -71,7 +71,7 @@ func (s *UserService) Register(ctx context.Context, login, password string) (str
 func (s *UserService) Authenticate(ctx context.Context, login, password string) (string, error) {
 	const op = "domain.services.UserService.Authorize"
 	log := s.logger.With(s.logger.StringField("op", op),
-		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
+		s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
 	)
 
 	user, err := s.repository.GetUserByLogin(ctx, login)
@@ -98,7 +98,7 @@ func (s *UserService) Authenticate(ctx context.Context, login, password string) 
 func (s *UserService) Authorize(ctx context.Context, token string) (*entity.User, error) {
 	const op = "domain.services.UserService.Authenticate"
 	log := s.logger.With(s.logger.StringField("op", op),
-		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
+		s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
 	)
 
 	userUUID, err := tool.CheckJWT(token, s.secretKey)

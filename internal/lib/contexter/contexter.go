@@ -5,12 +5,12 @@ import "context"
 type ctxKey string
 
 var (
-	// RequestId is the context key for the request ID.
-	RequestId = ctxKey("request_id")
+	// RequestID is the context key for the request ID.
+	RequestID = ctxKey("request_id")
 )
 
-// GetRequestId	returns the request id from the context.
-func GetRequestId(ctx context.Context) string {
-	requestId := ctx.Value(RequestId).(string)
-	return requestId
+// GetRequestID	returns the request id from the context.
+func GetRequestID(ctx context.Context) string {
+	requestID := ctx.Value(RequestID).(string)
+	return requestID
 }

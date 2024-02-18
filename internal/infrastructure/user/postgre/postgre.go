@@ -47,7 +47,7 @@ func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*ent
 	const op = "infrastructure.user.postgre.UserRepository.GetUserByLogin"
 	log := r.log.With(
 		r.log.StringField("op", op),
-		r.log.StringField("request_id", contexter.GetRequestId(ctx)),
+		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
 		r.log.StringField("user_login", login),
 	)
 
@@ -72,7 +72,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *entity.User) (*en
 
 	log := r.log.With(
 		r.log.StringField("op", op),
-		r.log.StringField("request_id", contexter.GetRequestId(ctx)),
+		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
 		r.log.StringField("user_login", user.Login),
 	)
 	_, err := r.db.Exec(ctx, `INSERT INTO users (uuid, login, password_hash) VALUES ($1, $2, $3)`, user.UUID, user.Login, user.PasswordHash)
@@ -96,7 +96,7 @@ func (r *UserRepository) GetUserByUUID(ctx context.Context, userUUID uuid.UUID) 
 	const op = "infrastructure.user.postgre.UserRepository.GetUserByUUID"
 	log := r.log.With(
 		r.log.StringField("op", op),
-		r.log.StringField("request_id", contexter.GetRequestId(ctx)),
+		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
 		r.log.StringField("user_uuid", userUUID.String()),
 	)
 

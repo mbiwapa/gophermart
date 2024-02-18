@@ -18,7 +18,7 @@ import (
 )
 
 func TestUserService_Registration(t *testing.T) {
-	ctx := context.WithValue(context.Background(), contexter.RequestId, "req")
+	ctx := context.WithValue(context.Background(), contexter.RequestID, "req")
 	type args struct {
 		ctx      context.Context
 		login    string
@@ -84,7 +84,7 @@ func TestUserService_Registration(t *testing.T) {
 }
 
 func TestUserService_Authenticate(t *testing.T) {
-	ctx := context.WithValue(context.Background(), contexter.RequestId, "req")
+	ctx := context.WithValue(context.Background(), contexter.RequestID, "req")
 	password := "password"
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -167,7 +167,7 @@ func TestUserService_Authenticate(t *testing.T) {
 }
 
 func TestUserService_Authorize(t *testing.T) {
-	ctx := context.WithValue(context.Background(), contexter.RequestId, "req")
+	ctx := context.WithValue(context.Background(), contexter.RequestID, "req")
 	userUUID, err := uuid.NewRandom()
 	if err != nil {
 		t.Fatalf("Failed to create user UUID: %v", err)
