@@ -1,4 +1,4 @@
-package register
+package login
 
 import (
 	"context"
@@ -16,11 +16,11 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
-// UserRegistrar is an interface for user registration.
+// UserAuthenticator is an interface for user authentication.
 //
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserRegistrar
-type UserRegistrar interface {
-	Register(ctx context.Context, login, password string) (string, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserAuthenticator
+type UserAuthenticator interface {
+	Authenticate(ctx context.Context, login, password string) (string, error)
 }
 
 // Request struct for HTTP Request in JSON
@@ -29,24 +29,24 @@ type Request struct {
 	Password string `json:"password" validate:"required" example:"test_Password"`
 }
 
-// New returned func for registering a new user.
+// New returned func for logging in a user.
 //
-//	@Summary		Регистрация нового пользователя.
-//	@Description	Эндпоинт используется для регистрации нового пользователя.
+//	@Summary		Аутентификация пользователя.
+//	@Description	Эндпоинт используется для аутентификации пользователя.
 //	@Description	Логин приводится к нижнему регистру на стороне сервера
-//	@Description	В заголовке Authorization возвращается JWT токен авторизации
+//	@Description	В заголовке Authorization возвращается JWT токен для авторизации
 //	@Accept			json
-//	@Router			/user/register [post]
-//	@Param			login		body	register.Request	true	"Login of the user"
-//	@Param			password	body	register.Request	true	"Password of the user"
-//	@Success		200			"User registered successfully"
-//	@Failure		409			"User already exists"
+//	@Router			/user/login [post]
+//	@Param			login		body	login.Request	true	"Login of the user"
+//	@Param			password	body	login.Request	true	"Password of the user"
+//	@Success		200			"User successfully authenticated"
+//	@Failure		401			"Login or password is wrong"
 //	@Failure		400			"Bad request"
 //	@Failure		500			"Internal server error"
 //	@Header			200			{string}	Authorization	"token"
-func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
+func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "app.http-server.handler.api.user.register.New"
+		const op = "app.http-server.handler.api.user.login.New"
 
 		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 		defer cancel()
@@ -75,10 +75,10 @@ func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
 			return
 		}
 
-		jwtString, err := service.Register(ctx, req.Login, req.Password)
+		jwtString, err := service.Authenticate(ctx, req.Login, req.Password)
 		if err != nil {
-			if errors.Is(err, entity.ErrUserExists) {
-				w.WriteHeader(http.StatusConflict)
+			if errors.Is(err, entity.ErrUserWrongPassword) {
+				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)
@@ -86,7 +86,7 @@ func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
 		}
 
 		w.Header().Set("Authorization", jwtString)
-		log.Info("User registered")
+		log.Info("User Authenticated")
 		w.WriteHeader(http.StatusOK)
 	}
 }

@@ -14,7 +14,10 @@ import (
 
 	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/docs"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/login"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/authorize"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/decompressor"
 	mwLogger "github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/logger"
 	"github.com/mbiwapa/gophermart.git/internal/domain/user/service"
 	"github.com/mbiwapa/gophermart.git/internal/infrastructure/user/postgre"
@@ -98,6 +101,7 @@ func (s *HTTPServer) Run() {
 //	@contact.url	http://v.max.example
 //	@contact.email	support@example.com
 //	@BasePath		/api
+//	@host			localhost:8080
 func (s *HTTPServer) newRouter() http.Handler {
 	docs.SwaggerInfo.Host = s.config.Addr
 
@@ -106,11 +110,19 @@ func (s *HTTPServer) newRouter() http.Handler {
 	r.Use(mwLogger.New(s.logger))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
+	r.Use(decompressor.New(s.logger))
 	r.Use(middleware.Heartbeat("/ping"))
 	// r.With(auth, handler)
 	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Post("/api/user/register", register.New(s.logger, s.userService))
+	r.Post("/api/user/login", login.New(s.logger, s.userService))
+
+	//Only for authenticated users
+	r.Group(func(r chi.Router) {
+		r.Use(authorize.New(s.logger, s.userService))
+
+	})
 
 	return r
 }

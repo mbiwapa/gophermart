@@ -8,6 +8,7 @@ import (
 
 	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
 	"github.com/mbiwapa/gophermart.git/internal/domain/user/tool"
+	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
@@ -36,12 +37,12 @@ func NewUserService(repository UserRepository, logger *logger.Logger, secretKey 
 	}
 }
 
-// Registration register a new user.
-func (s *UserService) Registration(ctx context.Context, login, password string) (string, error) {
+// Register register a new user.
+func (s *UserService) Register(ctx context.Context, login, password string) (string, error) {
 	const op = "domain.services.UserService.Registration"
 	log := s.logger.With(
 		s.logger.StringField("op", op),
-		s.logger.StringField("request_id", ctx.Value("request_id").(string)),
+		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
 	)
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -57,48 +58,47 @@ func (s *UserService) Registration(ctx context.Context, login, password string) 
 		return "", err
 	}
 
-	JWTstring, err := tool.CreateJWT(user.UUID, s.secretKey)
+	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
 	if err != nil {
 		log.Error("Failed to create JWT", log.ErrorField(err))
 		return "", err
 	}
 
-	return JWTstring, nil
+	return jwtString, nil
 }
 
-// Authorize authorize a user.
-func (s *UserService) Authorize(ctx context.Context, login, password string) (*entity.User, error) {
+// Authenticate authorize a user.
+func (s *UserService) Authenticate(ctx context.Context, login, password string) (string, error) {
 	const op = "domain.services.UserService.Authorize"
 	log := s.logger.With(s.logger.StringField("op", op),
-		s.logger.StringField("request_id", ctx.Value("request_id").(string)),
+		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
 	)
 
 	user, err := s.repository.GetUserByLogin(ctx, login)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		log.Error("Wrong password", log.ErrorField(err))
-		return nil, err
+		return "", entity.ErrUserWrongPassword
 	}
 
-	JWTstring, err := tool.CreateJWT(user.UUID, s.secretKey)
+	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
 	if err != nil {
 		log.Error("Failed to create JWT", log.ErrorField(err))
-		return nil, err
+		return "", err
 	}
-	user.JWT = JWTstring
 
-	return user, nil
+	return jwtString, nil
 }
 
-// Authenticate authenticates a user.
-func (s *UserService) Authenticate(ctx context.Context, token string) (*entity.User, error) {
+// Authorize authenticates a user.
+func (s *UserService) Authorize(ctx context.Context, token string) (*entity.User, error) {
 	const op = "domain.services.UserService.Authenticate"
 	log := s.logger.With(s.logger.StringField("op", op),
-		s.logger.StringField("request_id", ctx.Value("request_id").(string)),
+		s.logger.StringField("request_id", contexter.GetRequestId(ctx)),
 	)
 
 	userUUID, err := tool.CheckJWT(token, s.secretKey)
