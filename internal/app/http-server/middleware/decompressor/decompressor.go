@@ -14,11 +14,11 @@ import (
 func New(log *logger.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		const op = "internal.app.http-server.middleware.decompressor.New"
-		log = log.With(
+		logWith := log.With(
 			log.StringField("op", op),
 		)
 
-		log.Info("Decompressor middleware enabled")
+		logWith.Info("Decompressor middleware enabled")
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			contentEncoding := r.Header.Get("Content-Encoding")
@@ -27,7 +27,7 @@ func New(log *logger.Logger) func(next http.Handler) http.Handler {
 			if sendsGzip {
 				cr, err := newCompressReader(r.Body)
 				if err != nil {
-					log.Error("Failed init decompressor", log.ErrorField(err))
+					logWith.Error("Failed init decompressor", log.ErrorField(err))
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
@@ -36,7 +36,7 @@ func New(log *logger.Logger) func(next http.Handler) http.Handler {
 
 					err := cr.Close()
 					if err != nil {
-						log.Error("Failed closing compress reader", log.ErrorField(err))
+						logWith.Error("Failed closing compress reader", log.ErrorField(err))
 					}
 				}(cr)
 			}

@@ -13,14 +13,14 @@ import (
 func New(log *logger.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		const op = "internal.app.http-server.middleware.logger.New"
-		log = log.With(
+		logWith := log.With(
 			log.StringField("op", op),
 		)
 
 		log.Info("logger middleware enabled")
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			entry := log.With(
+			entry := logWith.With(
 				log.StringField("method", r.Method),
 				log.StringField("path", r.URL.Path),
 				log.StringField("remote_addr", r.RemoteAddr),

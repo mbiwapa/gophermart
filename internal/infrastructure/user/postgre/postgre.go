@@ -27,17 +27,17 @@ func NewUserRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logger
 
 	storage := &UserRepository{db: db, log: log}
 
-	log = log.With(log.StringField("op", op))
+	logWith := log.With(log.StringField("op", op))
 
 	_, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
 		uuid UUID PRIMARY KEY,
         login TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL);`)
 	if err != nil {
-		log.Error("Failed to create table", log.ErrorField(err))
+		logWith.Error("Failed to create table", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	log.Info("UserRepository initialized")
+	logWith.Info("UserRepository initialized")
 
 	return storage, nil
 }

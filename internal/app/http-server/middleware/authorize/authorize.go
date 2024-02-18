@@ -23,7 +23,9 @@ type UserAuthorizer interface {
 func New(log *logger.Logger, service UserAuthorizer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		const op = "internal.app.http-server.middleware.authorize.New"
-
+		logWith := log.With(
+			log.StringField("op", op),
+		)
 		log.Info("Authorize middleware enabled")
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -32,14 +34,13 @@ func New(log *logger.Logger, service UserAuthorizer) func(next http.Handler) htt
 
 			reqID := middleware.GetReqID(ctx)
 			ctx = context.WithValue(ctx, contexter.RequestID, reqID)
-			log = log.With(
-				log.StringField("op", op),
+			logWith = logWith.With(
 				log.StringField("request_id", reqID),
 			)
 
 			jwtString := r.Header.Get("Authorization")
 			if jwtString == "" {
-				log.Error("Authorization header is not set")
+				logWith.Error("Authorization header is not set")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

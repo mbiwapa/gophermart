@@ -53,7 +53,7 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 
 		reqID := middleware.GetReqID(ctx)
 		ctx = context.WithValue(ctx, contexter.RequestID, reqID)
-		log = log.With(
+		logWith := log.With(
 			log.StringField("op", op),
 			log.StringField("request_id", reqID),
 		)
@@ -61,16 +61,16 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 		var req Request
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
-			log.Error("Failed to decode request body", log.ErrorField(err))
+			logWith.Error("Failed to decode request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		//convert Login to lower case
 		req.Login = strings.ToLower(req.Login)
-		log.Info("Request decoded", log.AnyField("login", req.Login))
+		logWith.Info("Request decoded", log.AnyField("login", req.Login))
 
 		if err := validator.New().Struct(req); err != nil {
-			log.Error("Failed to validate request body", log.ErrorField(err))
+			logWith.Error("Failed to validate request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -86,7 +86,7 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 		}
 
 		w.Header().Set("Authorization", jwtString)
-		log.Info("User Authenticated")
+		logWith.Info("User Authenticated")
 		w.WriteHeader(http.StatusOK)
 	}
 }
