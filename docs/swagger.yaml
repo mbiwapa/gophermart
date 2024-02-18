@@ -1,5 +1,17 @@
 basePath: /api
 definitions:
+  login.Request:
+    properties:
+      login:
+        example: test@test.com
+        type: string
+      password:
+        example: test_Password
+        type: string
+    required:
+    - login
+    - password
+    type: object
   register.Request:
     properties:
       login:
@@ -12,6 +24,7 @@ definitions:
     - login
     - password
     type: object
+host: localhost:8080
 info:
   contact:
     email: support@example.com
@@ -21,6 +34,41 @@ info:
   title: Gophermart API
   version: "1.0"
 paths:
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Эндпоинт используется для аутентификации пользователя.
+        Логин приводится к нижнему регистру на стороне сервера
+        В заголовке Authorization возвращается JWT токен для авторизации
+      parameters:
+      - description: Login of the user
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/login.Request'
+      - description: Password of the user
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/login.Request'
+      responses:
+        "200":
+          description: User successfully authenticated
+          headers:
+            Authorization:
+              description: token
+              type: string
+        "400":
+          description: Bad request
+        "401":
+          description: Login or password is wrong
+        "500":
+          description: Internal server error
+      summary: Аутентификация пользователя.
   /user/register:
     post:
       consumes:
@@ -28,6 +76,7 @@ paths:
       description: |-
         Эндпоинт используется для регистрации нового пользователя.
         Логин приводится к нижнему регистру на стороне сервера
+        В заголовке Authorization возвращается JWT токен авторизации
       parameters:
       - description: Login of the user
         in: body
@@ -54,5 +103,5 @@ paths:
           description: User already exists
         "500":
           description: Internal server error
-      summary: This endpoint is used for registering a new user.
+      summary: Регистрация нового пользователя.
 swagger: "2.0"
