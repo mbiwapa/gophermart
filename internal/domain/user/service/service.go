@@ -1,27 +1,34 @@
-package services
+package service
 
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/google/uuid"
-
-	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
-	"github.com/mbiwapa/gophermart.git/internal/domain/repository"
-	"github.com/mbiwapa/gophermart.git/internal/domain/tool"
+	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/user/tool"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
+// UserRepository is an interface for user repository.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserRepository
+type UserRepository interface {
+	GetUserByLogin(ctx context.Context, login string) (*entity.User, error)
+	CreateUser(ctx context.Context, user *entity.User) (*entity.User, error)
+	GetUserByUUID(ctx context.Context, userUUID uuid.UUID) (*entity.User, error)
+}
+
 // UserService is a service for managing users.
 type UserService struct {
-	repository repository.UserRepository
+	repository UserRepository
 	secretKey  string
 	logger     *logger.Logger
 }
 
 // NewUserService returns a new user service.
-func NewUserService(repository repository.UserRepository, logger *logger.Logger, secretKey string) *UserService {
+func NewUserService(repository UserRepository, logger *logger.Logger, secretKey string) *UserService {
 	return &UserService{
 		repository: repository,
 		secretKey:  secretKey,
@@ -32,7 +39,8 @@ func NewUserService(repository repository.UserRepository, logger *logger.Logger,
 // Registration register a new user.
 func (s *UserService) Registration(ctx context.Context, login, password string) (string, error) {
 	const op = "domain.services.UserService.Registration"
-	log := s.logger.With(s.logger.StringField("op", op),
+	log := s.logger.With(
+		s.logger.StringField("op", op),
 		s.logger.StringField("request_id", ctx.Value("request_id").(string)),
 	)
 

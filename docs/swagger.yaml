@@ -1,0 +1,58 @@
+basePath: /api
+definitions:
+  register.Request:
+    properties:
+      login:
+        example: test@test.com
+        type: string
+      password:
+        example: test_Password
+        type: string
+    required:
+    - login
+    - password
+    type: object
+info:
+  contact:
+    email: support@example.com
+    name: v.max
+    url: http://v.max.example
+  description: This is a Gophermart server.
+  title: Gophermart API
+  version: "1.0"
+paths:
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Эндпоинт используется для регистрации нового пользователя.
+        Логин приводится к нижнему регистру на стороне сервера
+      parameters:
+      - description: Login of the user
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/register.Request'
+      - description: Password of the user
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/register.Request'
+      responses:
+        "200":
+          description: User registered successfully
+          headers:
+            Authorization:
+              description: token
+              type: string
+        "400":
+          description: Bad request
+        "409":
+          description: User already exists
+        "500":
+          description: Internal server error
+      summary: This endpoint is used for registering a new user.
+swagger: "2.0"

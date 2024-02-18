@@ -1,34 +1,37 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
-
+	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/server"
-	"github.com/mbiwapa/gophermart.git/internal/config"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
+// run swag init -g internal/app/http-server/server/server.go to generate swagger docs
+// run swag fmt -g internal/app/http-server/server/server.go to format swagger docs
 func main() {
+	mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	logger := logger.NewLogger()
+	log := logger.NewLogger()
 
-	config := config.MustLoadConfig()
+	log.Info("Loading configuration...")
+	conf := config.MustLoadConfig()
 
-	db, err := sql.Open("pgx", config.DB)
-	defer db.Close()
+	log.Info("Creating HTTP server...")
+	srv, err := server.New(mainCtx, conf, log)
 	if err != nil {
-		logger.Error("Failed to connect to database", logger.ErrorField(err))
-		os.Exit(1)
-	}
-
-	srv, err := server.NewHTTPServer(config, logger, db)
-	if err != nil {
-		logger.Error("Failed to create HTTP server", logger.ErrorField(err))
+		log.Error("Failed to create HTTP server", log.ErrorField(err))
 		os.Exit(1)
 	}
 
 	srv.Run()
+	<-mainCtx.Done()
+	time.Sleep(3 * time.Second)
+	log.Info("Good bye!")
 }

@@ -34,7 +34,7 @@ func CreateJWT(userUUID uuid.UUID, secretKey string) (string, error) {
 // CheckJWT verifies a JWT.
 func CheckJWT(tokenString string, secretKey string) (uuid.UUID, error) {
 	claims := JWTClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}

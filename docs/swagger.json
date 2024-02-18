@@ -1,0 +1,84 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a Gophermart server.",
+        "title": "Gophermart API",
+        "contact": {
+            "name": "v.max",
+            "url": "http://v.max.example",
+            "email": "support@example.com"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/user/register": {
+            "post": {
+                "description": "Эндпоинт используется для регистрации нового пользователя.\nЛогин приводится к нижнему регистру на стороне сервера",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "This endpoint is used for registering a new user.",
+                "parameters": [
+                    {
+                        "description": "Login of the user",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/register.Request"
+                        }
+                    },
+                    {
+                        "description": "Password of the user",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/register.Request"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User registered successfully",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "token"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "409": {
+                        "description": "User already exists"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "register.Request": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "test@test.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "test_Password"
+                }
+            }
+        }
+    }
+}

@@ -2,18 +2,20 @@ package register
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/repository"
+	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
-// UserRegistrator is an interface for user registrator.
+// UserRegistrator is an interface for user registration.
 //
 //go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserRegistrator
 type UserRegistrator interface {
@@ -22,11 +24,24 @@ type UserRegistrator interface {
 
 // Request struct for HTTP Request in JSON
 type Request struct {
-	Login    string `json:"login" validate:"required,lowercase"`
-	Password string `json:"password" validate:"required"`
+	Login    string `json:"login" validate:"required" example:"test@test.com"`
+	Password string `json:"password" validate:"required" example:"test_Password"`
 }
 
-// New returned func for save new url
+// New returned func for registering a new user.
+//
+//	@Summary		This endpoint is used for registering a new user.
+//	@Description	Эндпоинт используется для регистрации нового пользователя.
+//	@Description	Логин приводится к нижнему регистру на стороне сервера
+//	@Accept			json
+//	@Router			/user/register [post]
+//	@Param			login		body	register.Request	true	"Login of the user"
+//	@Param			password	body	register.Request	true	"Password of the user"
+//	@Success		200			"User registered successfully"
+//	@Failure		409			"User already exists"
+//	@Failure		400			"Bad request"
+//	@Failure		500			"Internal server error"
+//	@Header			200			{string}	Authorization	"token"
 func New(log *logger.Logger, service UserRegistrator) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +64,8 @@ func New(log *logger.Logger, service UserRegistrator) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		//convert Login to lower case
+		req.Login = strings.ToLower(req.Login)
 		log.Info("Request decoded", log.AnyField("login", req.Login))
 
 		if err := validator.New().Struct(req); err != nil {
@@ -59,7 +76,7 @@ func New(log *logger.Logger, service UserRegistrator) http.HandlerFunc {
 
 		jwtString, err := service.Registration(ctx, req.Login, req.Password)
 		if err != nil {
-			if err == repository.ErrUserExists {
+			if errors.Is(err, entity.ErrUserExists) {
 				w.WriteHeader(http.StatusConflict)
 				return
 			}

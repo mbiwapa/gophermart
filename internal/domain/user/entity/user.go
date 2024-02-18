@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"errors"
+
 	"github.com/google/uuid"
 )
 
@@ -11,6 +13,13 @@ type User struct {
 	PasswordHash string
 	JWT          string
 }
+
+var (
+	// ErrUserNotFound is returned when a user is not found.
+	ErrUserNotFound = errors.New("user not found")
+	// ErrUserExists is returned when a user already exists.
+	ErrUserExists = errors.New("user already exists")
+)
 
 // NewUser returns a new user.
 func NewUser(login, passwordHash, jwtToken string, userUUID uuid.UUID) *User {
