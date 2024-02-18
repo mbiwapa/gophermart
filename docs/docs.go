@@ -19,13 +19,62 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/user/register": {
+        "/user/login": {
             "post": {
-                "description": "Эндпоинт используется для регистрации нового пользователя.\nЛогин приводится к нижнему регистру на стороне сервера",
+                "description": "Эндпоинт используется для аутентификации пользователя.\nЛогин приводится к нижнему регистру на стороне сервера\nВ заголовке Authorization возвращается JWT токен для авторизации",
                 "consumes": [
                     "application/json"
                 ],
-                "summary": "This endpoint is used for registering a new user.",
+                "summary": "Аутентификация пользователя.",
+                "parameters": [
+                    {
+                        "description": "Login of the user",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/login.Request"
+                        }
+                    },
+                    {
+                        "description": "Password of the user",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/login.Request"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User successfully authenticated",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "token"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "401": {
+                        "description": "Login or password is wrong"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/user/register": {
+            "post": {
+                "description": "Эндпоинт используется для регистрации нового пользователя.\nЛогин приводится к нижнему регистру на стороне сервера\nВ заголовке Authorization возвращается JWT токен авторизации",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Регистрация нового пользователя.",
                 "parameters": [
                     {
                         "description": "Login of the user",
@@ -70,6 +119,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "login.Request": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "test@test.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "test_Password"
+                }
+            }
+        },
         "register.Request": {
             "type": "object",
             "required": [
@@ -93,7 +159,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "",
+	Host:             "localhost:8080",
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Gophermart API",

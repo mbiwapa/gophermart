@@ -1,4 +1,4 @@
-package register_test
+package login_test
 
 import (
 	"bytes"
@@ -11,14 +11,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register"
-	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register/mocks"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/login"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/login/mocks"
 	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
 func TestNew(t *testing.T) {
-
 	jwt := "JWT_test"
 
 	tests := []struct {
@@ -31,7 +30,7 @@ func TestNew(t *testing.T) {
 		statusCode    int
 	}{
 		{
-			name:          "Registration: Success",
+			name:          "Login: Success",
 			login:         "test_user",
 			password:      "TestPassword",
 			mockError:     nil,
@@ -40,20 +39,20 @@ func TestNew(t *testing.T) {
 			statusCode:    http.StatusOK,
 		},
 		{
-			name:          "Registration: User already exists",
+			name:          "Login: wrong password",
 			login:         "test_user",
 			password:      "TestPassword",
-			mockError:     entity.ErrUserExists,
+			mockError:     entity.ErrUserWrongPassword,
 			incorrectJSON: false,
-			statusCode:    http.StatusConflict,
+			statusCode:    http.StatusUnauthorized,
 		},
 		{
-			name:          "Registration: Incorrect JSON",
+			name:          "Login: Incorrect JSON",
 			incorrectJSON: true,
 			statusCode:    http.StatusBadRequest,
 		},
 		{
-			name:          "Registration: Repository error",
+			name:          "Login: Repository error",
 			login:         "test_user",
 			password:      "TestPassword",
 			mockError:     errors.New("repository error"),
@@ -66,16 +65,16 @@ func TestNew(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			userRegistratorMock := mocks.NewUserRegistrar(t)
+			userAuthenticatorMock := mocks.NewUserAuthenticator(t)
 			if !tc.incorrectJSON {
-				userRegistratorMock.On("Register", mock.Anything, tc.login, tc.password).
+				userAuthenticatorMock.On("Authenticate", mock.Anything, tc.login, tc.password).
 					Return(tc.jwt, tc.mockError).
 					Once()
 			}
 
 			log := logger.NewLogger()
 
-			handler := register.New(log, userRegistratorMock)
+			handler := login.New(log, userAuthenticatorMock)
 
 			var input string
 
