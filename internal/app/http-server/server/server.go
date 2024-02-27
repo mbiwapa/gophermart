@@ -14,27 +14,34 @@ import (
 
 	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/docs"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/balance"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/balance/withdraw"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/login"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/orders"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/authorize"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/decompressor"
 	mwLogger "github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/logger"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/service"
-	"github.com/mbiwapa/gophermart.git/internal/infrastructure/user/postgre"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/service"
+	"github.com/mbiwapa/gophermart.git/internal/infrastructure/postgre"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
 // HTTPServer is a http.Handler that serves HTTP requests.
 type HTTPServer struct {
-	server      *http.Server
-	logger      *logger.Logger
-	userService *service.UserService
-	ctx         context.Context
-	config      *config.Config
+	server         *http.Server
+	logger         *logger.Logger
+	userService    *service.UserService
+	orderService   *service.OrderService
+	balanceService *service.BalanceService
+	ctx            context.Context
+	config         *config.Config
+	orderQueue     chan entity.Order
 }
 
 // New returns a new HTTPServer.
-func New(ctx context.Context, config *config.Config, logger *logger.Logger) (*HTTPServer, error) {
+func New(ctx context.Context, config *config.Config, logger *logger.Logger, orderQueue chan entity.Order) (*HTTPServer, error) {
 
 	server := &HTTPServer{
 		server: &http.Server{
@@ -43,19 +50,19 @@ func New(ctx context.Context, config *config.Config, logger *logger.Logger) (*HT
 				return ctx
 			},
 		},
-		logger: logger,
-		ctx:    ctx,
-		config: config,
+		logger:     logger,
+		ctx:        ctx,
+		config:     config,
+		orderQueue: orderQueue,
 	}
 	return server, nil
 }
 
 // Run serves HTTP requests.
 func (s *HTTPServer) Run() {
-
+	const op = "internal.app.http-server.server.Run"
+	log := s.logger.With(s.logger.StringField("op", op))
 	go func() {
-		const op = "internal.app.http-server.server.Run"
-		log := s.logger.With(s.logger.StringField("op", op))
 
 		dbpool, err := pgxpool.New(s.ctx, s.config.DB)
 		if err != nil {
@@ -71,6 +78,12 @@ func (s *HTTPServer) Run() {
 
 		userService := service.NewUserService(userRepository, s.logger, s.config.SecretKey)
 		s.userService = userService
+
+		//FIXME добавить репозиторий заказов
+		s.orderService = service.NewOrderService(s.logger, s.orderQueue)
+
+		//FIXME добавить репозиторий баланса
+		s.balanceService = service.NewBalanceService(s.logger)
 
 		s.server.Handler = s.newRouter()
 
@@ -112,7 +125,6 @@ func (s *HTTPServer) newRouter() http.Handler {
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 	r.Use(decompressor.New(s.logger))
 	r.Use(middleware.Heartbeat("/ping"))
-	// r.With(auth, handler)
 	r.Get("/swagger/*", httpSwagger.Handler())
 
 	r.Post("/api/user/register", register.New(s.logger, s.userService))
@@ -120,8 +132,11 @@ func (s *HTTPServer) newRouter() http.Handler {
 
 	//Only for authenticated users
 	r.Group(func(r chi.Router) {
-		r.Use(authorize.New(s.logger, s.userService))
-
+		r.Use(authorize.New(s.logger, s.userService)) //FIXME  почему запускается 2 раза?
+		r.Post("/api/user/orders", orders.NewAdder(s.logger, s.orderService, s.userService))
+		r.Get("/api/user/orders", orders.NewAllGetter(s.logger, s.orderService, s.userService))
+		r.Get("/api/user/balance", balance.New(s.logger, s.balanceService, s.userService))
+		r.Post("/api/user/balance/withdraw", withdraw.New(s.logger, s.balanceService, s.userService))
 	})
 
 	return r

@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
 	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )

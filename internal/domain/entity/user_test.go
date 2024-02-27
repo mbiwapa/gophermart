@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
 )
 
 func TestNewUser(t *testing.T) {

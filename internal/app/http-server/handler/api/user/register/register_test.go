@@ -13,7 +13,7 @@ import (
 
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register/mocks"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
