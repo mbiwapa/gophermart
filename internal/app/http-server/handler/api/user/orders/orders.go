@@ -37,7 +37,7 @@ func NewAdder(log *logger.Logger, adder OrderAdder, authorizer UserAuthorizer) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.orders.NewAdder"
 
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		reqID := middleware.GetReqID(ctx)
