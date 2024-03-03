@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
 	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )

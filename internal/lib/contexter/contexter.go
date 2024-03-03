@@ -12,5 +12,8 @@ var (
 // GetRequestID	returns the request id from the context.
 func GetRequestID(ctx context.Context) string {
 	requestID := ctx.Value(RequestID).(string)
+	if requestID == "" {
+		requestID = "unknown"
+	}
 	return requestID
 }

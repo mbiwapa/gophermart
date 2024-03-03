@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/service"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/service/mocks"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/tool"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/service"
+	"github.com/mbiwapa/gophermart.git/internal/domain/service/mocks"
+	"github.com/mbiwapa/gophermart.git/internal/domain/tool"
 	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )

@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/entity"
-	"github.com/mbiwapa/gophermart.git/internal/domain/user/tool"
+	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
+	"github.com/mbiwapa/gophermart.git/internal/domain/tool"
 	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
