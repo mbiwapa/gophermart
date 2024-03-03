@@ -3,6 +3,7 @@ package httpc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -47,10 +48,21 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		log.Error("Failed to send request", log.ErrorField(err))
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error("Failed to close response body", log.ErrorField(err))
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error("No response", log.AnyField("code", resp.StatusCode))
+		if resp.StatusCode == http.StatusNoContent {
+			return nil, entity.ErrExternalOrderNotRegistered
+		}
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return nil, entity.ErrExternalOrderRateLimitExceeded
+		}
 		return nil, err
 	}
 
@@ -59,17 +71,17 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		log.Error("Cant  read response", log.ErrorField(err))
 		return nil, err
 	}
-	log.Info("Request completed successfully!")
 	return bodyBytes, nil
 
 }
 
 // Check возвращает информацию о заказе по номеру
-func (c *OrderClient) Check(ctx context.Context, number string) (entity.Order, error) {
+func (c *OrderClient) Check(ctx context.Context, number int) (entity.Order, error) {
 	const op = "http-client.send.GetOrderInfo"
 	log := c.logger.With(c.logger.StringField("op", op))
 
-	path := "/api/orders/" + number
+	stringNumber := fmt.Sprintf("%d", number)
+	path := "/api/orders/" + stringNumber
 	bodyBytes, err := c.get(ctx, path)
 	if err != nil {
 		return entity.Order{}, err

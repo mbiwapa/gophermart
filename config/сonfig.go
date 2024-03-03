@@ -7,9 +7,10 @@ import (
 
 // Config Структура со всеми конфигурациями сервера
 type Config struct {
-	Addr      string
-	DB        string
-	SecretKey string
+	Addr       string
+	DB         string
+	SecretKey  string
+	AccrualAdr string
 }
 
 // MustLoadConfig загрузка конфигурации
@@ -28,6 +29,12 @@ func MustLoadConfig() *Config {
 		"22gwiT5#eQxdh89OJZM-9af=LDB^EIJsW7Bbv90s1L^U.O7jNu8OrEhWLM.zJFUk",
 		"Секретный ключ для хеширования пароля",
 	)
+	flag.StringVar(
+		&config.AccrualAdr,
+		"r",
+		"htt://localhost:8080",
+		"Адрес системы расчёта начислений",
+	)
 	flag.Parse()
 
 	envAddr := os.Getenv("RUN_ADDRESS")
@@ -41,6 +48,10 @@ func MustLoadConfig() *Config {
 	envSecretKey := os.Getenv("SECRET_KEY")
 	if envSecretKey != "" {
 		config.SecretKey = envSecretKey
+	}
+	envAccrualAdr := os.Getenv("ACCRUAL_ADDR")
+	if envAccrualAdr != "" {
+		config.AccrualAdr = envAccrualAdr
 	}
 
 	return &config

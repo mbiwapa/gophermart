@@ -10,25 +10,32 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
+// BalanceRepository is an interface for balance repository.
 type BalanceRepository interface {
 	GetBalance(ctx context.Context, userUUID uuid.UUID) (*entity.Balance, error)
 	GetWithdrawOperations(ctx context.Context, userUUID uuid.UUID) ([]entity.BalanceOperation, error)
-	Execute(ctx context.Context, operation entity.BalanceOperation) (*entity.Balance, error)
+	Withdraw(ctx context.Context, operation entity.BalanceOperation) error
+	Accrue(ctx context.Context, operation entity.BalanceOperation) error
+	CreateBalance(ctx context.Context, userUUID uuid.UUID) error
 }
 
+// BalanceService is a service for managing balances.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=BalanceService
 type BalanceService struct {
 	repository BalanceRepository
 	logger     *logger.Logger
 }
 
-// FIXME add repository
-func NewBalanceService(logger *logger.Logger) *BalanceService {
+// NewBalanceService returns a new balance service.
+func NewBalanceService(logger *logger.Logger, repository BalanceRepository) *BalanceService {
 	return &BalanceService{
-		repository: nil,
+		repository: repository,
 		logger:     logger,
 	}
 }
 
+// GetBalance returns the balance of a user.
 func (s *BalanceService) GetBalance(ctx context.Context, userUUID uuid.UUID) (*entity.Balance, error) {
 	const op = "domain.services.BalanceService.GetBalance"
 	log := s.logger.With(
@@ -46,37 +53,50 @@ func (s *BalanceService) GetBalance(ctx context.Context, userUUID uuid.UUID) (*e
 	return balance, nil
 }
 
-func (s *BalanceService) Execute(ctx context.Context, operation entity.BalanceOperation) (*entity.Balance, error) {
+// Execute executes a balance operation.
+func (s *BalanceService) Execute(ctx context.Context, operation entity.BalanceOperation) error {
 	const op = "domain.services.BalanceService.Execute"
 	log := s.logger.With(
 		s.logger.StringField("op", op),
 		s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
 	)
 
-	balance, err := s.repository.Execute(ctx, operation)
-	if err != nil {
-		log.Error("Failed to get balance", log.ErrorField(err))
-		return nil, err
+	if operation.Withdrawal > 0 {
+		log.Info("Executing withdrawal")
+		return s.repository.Withdraw(ctx, operation)
 	}
-	// FIXME проверка что есть деньги для списания если это списание, просто начислить если это начисление
-
-	log.Info("Balance updated")
-	return balance, nil
+	if operation.Accrual > 0 {
+		log.Info("Executing accrual")
+		return s.repository.Accrue(ctx, operation)
+	}
+	return nil
 }
 
+// GetWithdrawOperations returns all withdrawal operations for a user.
 func (s *BalanceService) GetWithdrawOperations(ctx context.Context, userUUID uuid.UUID) ([]entity.BalanceOperation, error) {
-	const op = "domain.services.BalanceService.GetOperations"
-	log := s.logger.With(
-		s.logger.StringField("op", op),
-		s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
-	)
+	//const op = "domain.services.BalanceService.GetOperations"
+	//log := s.logger.With(
+	//	s.logger.StringField("op", op),
+	//	s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
+	//)
 
 	operations, err := s.repository.GetWithdrawOperations(ctx, userUUID)
 	if err != nil {
-		log.Error("Failed to get operations", log.ErrorField(err))
 		return nil, err
 	}
-
-	log.Info("Operations retrieved")
 	return operations, nil
+}
+
+func (s *BalanceService) CreateBalanceForUser(ctx context.Context, userUUID uuid.UUID) error {
+	//const op = "domain.services.BalanceService.CreateBalanceForUser"
+	//log := s.logger.With(
+	//    s.logger.StringField("op", op),
+	//    s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
+	//)
+
+	err := s.repository.CreateBalance(ctx, userUUID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

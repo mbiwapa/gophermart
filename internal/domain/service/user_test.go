@@ -64,12 +64,18 @@ func TestUserService_Registration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			//Prepare mocks
+			NewBalanceCreatorMock := mocks.NewBalanceCreator(t)
+			if tc.wantErr == nil {
+				NewBalanceCreatorMock.On("CreateBalanceForUser", mock.Anything, mock.Anything).
+					Return(nil).
+					Once()
+			}
 			NewUserRepositoryMock := mocks.NewUserRepository(t)
 			NewUserRepositoryMock.On("CreateUser", mock.Anything, mock.Anything).
 				Return(tc.repositoryWant, tc.repositoryErr).
 				Once()
 			log := logger.NewLogger()
-			s := service.NewUserService(NewUserRepositoryMock, log, "secret")
+			s := service.NewUserService(NewUserRepositoryMock, NewBalanceCreatorMock, log, "secret")
 			//Body of test
 			got, err := s.Register(tc.args.ctx, tc.args.login, tc.args.password)
 			//Asserts
@@ -147,12 +153,13 @@ func TestUserService_Authenticate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			//Prepare mocks
+			NewBalanceCreatorMock := mocks.NewBalanceCreator(t)
 			NewUserRepositoryMock := mocks.NewUserRepository(t)
 			NewUserRepositoryMock.On("GetUserByLogin", mock.Anything, mock.Anything).
 				Return(tc.repositoryWant, tc.repositoryErr).
 				Once()
 			log := logger.NewLogger()
-			s := service.NewUserService(NewUserRepositoryMock, log, "secret")
+			s := service.NewUserService(NewUserRepositoryMock, NewBalanceCreatorMock, log, "secret")
 			//Body of test
 			got, err := s.Authenticate(tc.args.ctx, tc.args.login, tc.args.password)
 			//Asserts
@@ -216,9 +223,10 @@ func TestUserService_Authorize(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			//Prepare mocks
+			NewBalanceCreatorMock := mocks.NewBalanceCreator(t)
 			NewUserRepositoryMock := mocks.NewUserRepository(t)
 			log := logger.NewLogger()
-			s := service.NewUserService(NewUserRepositoryMock, log, "secret")
+			s := service.NewUserService(NewUserRepositoryMock, NewBalanceCreatorMock, log, "secret")
 			//Body of test
 			got, err := s.Authorize(tc.args.ctx, tc.args.token)
 			//Asserts

@@ -23,7 +23,7 @@ type UserRepository struct {
 
 // NewUserRepository returns a new postgre user repository
 func NewUserRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logger) (*UserRepository, error) {
-	const op = "infrastructure.user.postgre.NewUserRepository"
+	const op = "infrastructure.postgre.NewUserRepository"
 
 	storage := &UserRepository{db: db, log: log}
 
@@ -37,14 +37,13 @@ func NewUserRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logger
 		logWith.Error("Failed to create table", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	logWith.Info("UserRepository initialized")
 
 	return storage, nil
 }
 
 // GetUserByLogin returns a user by login.
 func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*entity.User, error) {
-	const op = "infrastructure.user.postgre.UserRepository.GetUserByLogin"
+	const op = "infrastructure.postgre.UserRepository.GetUserByLogin"
 	log := r.log.With(
 		r.log.StringField("op", op),
 		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
@@ -68,7 +67,7 @@ func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*ent
 
 // CreateUser creates a new user.
 func (r *UserRepository) CreateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
-	const op = "infrastructure.user.postgre.UserRepository.CreateUser"
+	const op = "infrastructure.postgre.UserRepository.CreateUser"
 
 	log := r.log.With(
 		r.log.StringField("op", op),
@@ -93,7 +92,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *entity.User) (*en
 
 // GetUserByUUID returns a user by UUID.
 func (r *UserRepository) GetUserByUUID(ctx context.Context, userUUID uuid.UUID) (*entity.User, error) {
-	const op = "infrastructure.user.postgre.UserRepository.GetUserByUUID"
+	const op = "infrastructure.postgre.UserRepository.GetUserByUUID"
 	log := r.log.With(
 		r.log.StringField("op", op),
 		r.log.StringField("request_id", contexter.GetRequestID(ctx)),

@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/server"
 	"github.com/mbiwapa/gophermart.git/internal/app/workers"
@@ -25,6 +27,13 @@ func main() {
 	log.Info("Loading configuration...")
 	conf := config.MustLoadConfig()
 
+	db, err := pgxpool.New(mainCtx, conf.DB)
+	if err != nil {
+		log.Error("Failed to connect to database", log.ErrorField(err))
+		os.Exit(1)
+	}
+	defer db.Close()
+
 	log.Info("Create order queue chanel...")
 	orderQueue := make(chan entity.Order, 100)
 	defer close(orderQueue)
@@ -41,20 +50,21 @@ func main() {
 			log.Error("Error in order worker", log.ErrorField(orderErr))
 			os.Exit(1)
 		}
+		log.Info("Error chanel is closed")
 	}()
 
 	log.Info("Creating HTTP server...")
-	srv, err := server.New(mainCtx, conf, log, orderQueue)
+	srv, err := server.New(mainCtx, conf, log, orderQueue, db)
 	if err != nil {
 		log.Error("Failed to create HTTP server", log.ErrorField(err))
 		os.Exit(1)
 	}
 	srv.Run()
 
-	orderWorker := workers.NewOrderWorker(mainCtx, log, orderQueue, errorChan, balanceQueue)
+	orderWorker := workers.NewOrderWorker(mainCtx, log, orderQueue, errorChan, balanceQueue, db, conf.AccrualAdr)
 	orderWorker.Run()
 
-	balanceWorker := workers.NewBalanceWorker(mainCtx, log, balanceQueue, errorChan)
+	balanceWorker := workers.NewBalanceWorker(mainCtx, log, balanceQueue, errorChan, db)
 	balanceWorker.Run()
 
 	<-mainCtx.Done()

@@ -21,19 +21,26 @@ type UserRepository interface {
 	GetUserByUUID(ctx context.Context, userUUID uuid.UUID) (*entity.User, error)
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=BalanceCreator
+type BalanceCreator interface {
+	CreateBalanceForUser(ctx context.Context, userUUID uuid.UUID) error
+}
+
 // UserService is a service for managing users.
 type UserService struct {
-	repository UserRepository
-	secretKey  string
-	logger     *logger.Logger
+	repository     UserRepository
+	secretKey      string
+	logger         *logger.Logger
+	balanceService BalanceCreator
 }
 
 // NewUserService returns a new user service.
-func NewUserService(repository UserRepository, logger *logger.Logger, secretKey string) *UserService {
+func NewUserService(repository UserRepository, balanceService BalanceCreator, logger *logger.Logger, secretKey string) *UserService {
 	return &UserService{
-		repository: repository,
-		secretKey:  secretKey,
-		logger:     logger,
+		repository:     repository,
+		secretKey:      secretKey,
+		logger:         logger,
+		balanceService: balanceService,
 	}
 }
 
@@ -57,6 +64,12 @@ func (s *UserService) Register(ctx context.Context, login, password string) (str
 	if err != nil {
 		return "", err
 	}
+
+	err = s.balanceService.CreateBalanceForUser(ctx, user.UUID)
+	if err != nil {
+		return "", err
+	}
+	log.Info("User balance created")
 
 	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
 	if err != nil {

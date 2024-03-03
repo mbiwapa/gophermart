@@ -2,10 +2,12 @@ package withdrawals
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
 	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
@@ -13,22 +15,26 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
+// BalanceWithdrawOperationGetter is an interface for authorizing users.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=BalanceWithdrawOperationGetter
 type BalanceWithdrawOperationGetter interface {
 	GetWithdrawOperations(ctx context.Context, userUUID uuid.UUID) ([]entity.BalanceOperation, error)
 }
 
+// UserAuthorizer is an interface for authorizing users.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserAuthorizer
 type UserAuthorizer interface {
 	Authorize(ctx context.Context, token string) (*entity.User, error)
 }
 
-type Request struct {
-	OrderNumber string  `json:"order" validate:"required" example:"12312455"`
-	Sum         float64 `json:"sum" validate:"required" example:"100"`
-}
+//TODO swag doc
 
+// New  returned func for showing user's withdrawal operations.
 func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "app.http-server.handler.api.user.orders.NewGetter"
+		const op = "app.http-server.handler.api.user.withdrawals.New"
 
 		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 		defer cancel()
@@ -40,17 +46,25 @@ func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer U
 			log.StringField("request_id", reqID),
 		)
 
-		//FIXME add validation and error handling and etc
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
-		balance, err := getter.GetWithdrawOperations(ctx, user.UUID)
 		if err != nil {
-			_ = balance
-			//FIXME add error handling and etc
+			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		balanceOperations, err := getter.GetWithdrawOperations(ctx, user.UUID)
+		if err != nil {
+			if errors.Is(err, entity.ErrBalanceOperationsNotFound) {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		logWith.Info("Balance fetched", log.AnyField("balance", balance))
+		render.JSON(w, r, balanceOperations)
+		logWith.Info("Withdrawal operations fetched")
 		w.WriteHeader(http.StatusOK)
 	}
 }

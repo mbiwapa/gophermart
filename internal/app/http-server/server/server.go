@@ -19,6 +19,7 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/login"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/orders"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/register"
+	"github.com/mbiwapa/gophermart.git/internal/app/http-server/handler/api/user/withdrawals"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/authorize"
 	"github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/decompressor"
 	mwLogger "github.com/mbiwapa/gophermart.git/internal/app/http-server/middleware/logger"
@@ -38,10 +39,11 @@ type HTTPServer struct {
 	ctx            context.Context
 	config         *config.Config
 	orderQueue     chan entity.Order
+	db             *pgxpool.Pool
 }
 
 // New returns a new HTTPServer.
-func New(ctx context.Context, config *config.Config, logger *logger.Logger, orderQueue chan entity.Order) (*HTTPServer, error) {
+func New(ctx context.Context, config *config.Config, logger *logger.Logger, orderQueue chan entity.Order, db *pgxpool.Pool) (*HTTPServer, error) {
 
 	server := &HTTPServer{
 		server: &http.Server{
@@ -54,6 +56,7 @@ func New(ctx context.Context, config *config.Config, logger *logger.Logger, orde
 		ctx:        ctx,
 		config:     config,
 		orderQueue: orderQueue,
+		db:         db,
 	}
 	return server, nil
 }
@@ -63,27 +66,27 @@ func (s *HTTPServer) Run() {
 	const op = "internal.app.http-server.server.Run"
 	log := s.logger.With(s.logger.StringField("op", op))
 	go func() {
-
-		dbpool, err := pgxpool.New(s.ctx, s.config.DB)
-		if err != nil {
-			log.Error("Failed to connect to database", log.ErrorField(err))
-			os.Exit(1)
-		}
-
-		userRepository, err := postgre.NewUserRepository(s.ctx, dbpool, s.logger)
+		userRepository, err := postgre.NewUserRepository(s.ctx, s.db, s.logger)
 		if err != nil {
 			log.Error("Failed to create user repository", log.ErrorField(err))
 			os.Exit(1)
 		}
+		orderRepository, err := postgre.NewOrderRepository(s.ctx, s.db, s.logger)
+		if err != nil {
+			log.Error("Failed to create order repository", log.ErrorField(err))
+			os.Exit(1)
+		}
+		balanceRepository, err := postgre.NewBalanceRepository(s.ctx, s.db, s.logger)
+		if err != nil {
+			log.Error("Failed to create balance repository", log.ErrorField(err))
+			os.Exit(1)
+		}
 
-		userService := service.NewUserService(userRepository, s.logger, s.config.SecretKey)
-		s.userService = userService
+		s.balanceService = service.NewBalanceService(s.logger, balanceRepository)
 
-		//FIXME добавить репозиторий заказов
-		s.orderService = service.NewOrderService(s.logger, s.orderQueue)
+		s.userService = service.NewUserService(userRepository, s.balanceService, s.logger, s.config.SecretKey)
 
-		//FIXME добавить репозиторий баланса
-		s.balanceService = service.NewBalanceService(s.logger)
+		s.orderService = service.NewOrderService(s.logger, s.orderQueue, orderRepository)
 
 		s.server.Handler = s.newRouter()
 
@@ -94,8 +97,6 @@ func (s *HTTPServer) Run() {
 		})
 		g.Go(func() error {
 			<-gCtx.Done()
-			log.Info("Database connection closed")
-			dbpool.Close()
 			log.Info("Shutdown server!")
 			return s.server.Shutdown(context.Background())
 		})
@@ -137,6 +138,7 @@ func (s *HTTPServer) newRouter() http.Handler {
 		r.Get("/api/user/orders", orders.NewAllGetter(s.logger, s.orderService, s.userService))
 		r.Get("/api/user/balance", balance.New(s.logger, s.balanceService, s.userService))
 		r.Post("/api/user/balance/withdraw", withdraw.New(s.logger, s.balanceService, s.userService))
+		r.Get("/api/user/withdrawals", withdrawals.New(s.logger, s.balanceService, s.userService))
 	})
 
 	return r

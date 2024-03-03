@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
 	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
@@ -14,23 +15,25 @@ import (
 )
 
 // UserBalanceGetter is an interface for getting an balance from the user.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserBalanceGetter
 type UserBalanceGetter interface {
 	GetBalance(ctx context.Context, userUUID uuid.UUID) (*entity.Balance, error)
 }
 
-// Response is a response for the user balance.
-type Response struct {
-	Current   float64 `json:"current" example:"500.5"`
-	Withdrawn float64 `json:"withdrawn" example:"42"`
-}
-
+// UserAuthorizer is an interface for authorizing users.
+//
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=UserAuthorizer
 type UserAuthorizer interface {
 	Authorize(ctx context.Context, token string) (*entity.User, error)
 }
 
+//TODO swag documentation
+
+// New  returned func for getting an balance from the user.
 func New(log *logger.Logger, getter UserBalanceGetter, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "app.http-server.handler.api.user.orders.NewGetter"
+		const op = "app.http-server.handler.api.user.balance.New"
 
 		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 		defer cancel()
@@ -42,17 +45,21 @@ func New(log *logger.Logger, getter UserBalanceGetter, authorizer UserAuthorizer
 			log.StringField("request_id", reqID),
 		)
 
-		//FIXME add validation and error handling and etc
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
+		if err != nil {
+			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		balance, err := getter.GetBalance(ctx, user.UUID)
 		if err != nil {
-			_ = balance
-			//FIXME add error handling and etc
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		logWith.Info("Balance fetched", log.AnyField("balance", balance))
+		render.JSON(w, r, balance)
+		logWith.Info("Balance fetched")
 		w.WriteHeader(http.StatusOK)
 	}
 }
