@@ -42,7 +42,7 @@ func TestNew(t *testing.T) {
 			name:          "Login: wrong password",
 			login:         "test_user",
 			password:      "TestPassword",
-			mockError:     entity.ErrUserWrongPassword,
+			mockError:     entity.ErrUserWrongPasswordOrLogin,
 			incorrectJSON: false,
 			statusCode:    http.StatusUnauthorized,
 		},

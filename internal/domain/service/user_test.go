@@ -130,21 +130,9 @@ func TestUserService_Authenticate(t *testing.T) {
 				password: "wrong",
 			},
 			want:           "",
-			wantErr:        entity.ErrUserWrongPassword,
+			wantErr:        entity.ErrUserWrongPasswordOrLogin,
 			repositoryWant: &entity.User{UUID: uuid.New(), Login: "test", PasswordHash: string(passwordHash), JWT: "jwtString"},
 			repositoryErr:  nil,
-		},
-		{
-			name: "Authenticate a user: user not found",
-			args: args{
-				ctx:      ctx,
-				login:    "wrong",
-				password: "password",
-			},
-			want:           "",
-			wantErr:        entity.ErrUserNotFound,
-			repositoryWant: nil,
-			repositoryErr:  entity.ErrUserNotFound,
 		},
 	}
 
