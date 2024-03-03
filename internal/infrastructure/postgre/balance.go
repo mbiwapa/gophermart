@@ -2,7 +2,6 @@ package postgre
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -97,14 +96,14 @@ func (r *BalanceRepository) GetWithdrawOperations(ctx context.Context, userUUID 
 		var operation entity.BalanceOperation
 		err = result.Scan(&operation.UUID, &operation.UserUUID, &operation.Accrual, &operation.Withdrawal, &operation.OrderNumber, &operation.ProcessedAt)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				log.Info("No withdraw operations found")
-				return nil, entity.ErrBalanceOperationsNotFound
-			}
 			log.Error("Failed to scan row", log.ErrorField(err))
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		operations = append(operations, operation)
+	}
+	if len(operations) == 0 {
+		log.Info("No withdraw operations found")
+		return nil, entity.ErrBalanceOperationsNotFound
 	}
 	return operations, nil
 }

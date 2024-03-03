@@ -19,8 +19,8 @@ var (
 	ErrUserNotFound = errors.New("user not found")
 	// ErrUserExists is returned when a user already exists.
 	ErrUserExists = errors.New("user already exists")
-	// ErrUserWrongPassword is returned when a user password is wrong.
-	ErrUserWrongPassword = errors.New("wrong password")
+	// ErrUserWrongPasswordOrLogin is returned when a user password is wrong.
+	ErrUserWrongPasswordOrLogin = errors.New("wrong password")
 )
 
 // NewUser returns a new user.

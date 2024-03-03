@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/domain/service"
 	httpc "github.com/mbiwapa/gophermart.git/internal/infrastructure/http-client"
 	"github.com/mbiwapa/gophermart.git/internal/infrastructure/postgre"
+	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
@@ -55,10 +57,10 @@ func (w *OrderWorker) Run() {
 	w.orderService = service.NewOrderService(w.logger, w.orderQueue, orderRepository)
 	w.orderService.Client = client
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= 3; i++ {
 		go w.worker()
 	}
-	log.Info("Star 20 order workers")
+	log.Info("Star 3 order workers")
 }
 
 // worker is a goroutine that is responsible for processing orders.
@@ -75,7 +77,10 @@ func (w *OrderWorker) worker() {
 				return
 			}
 
-			bonuses, err := w.orderService.Check(w.ctx, order)
+			reqID := "req_order" + fmt.Sprintf("%d", order.Number)
+			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
+
+			bonuses, err := w.orderService.Check(ctx, order)
 			if err != nil {
 				w.errorChan <- fmt.Errorf("%s: %w", op, err)
 				return
@@ -93,6 +98,7 @@ func (w *OrderWorker) worker() {
 				}
 			}
 		default:
+			time.Sleep(1 * time.Second)
 		}
 	}
 }

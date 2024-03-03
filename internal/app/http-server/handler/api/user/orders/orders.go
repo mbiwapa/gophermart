@@ -104,7 +104,7 @@ func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAut
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.orders.NewAllGetter"
 
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		reqID := middleware.GetReqID(ctx)

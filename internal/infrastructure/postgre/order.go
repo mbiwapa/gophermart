@@ -30,12 +30,17 @@ func NewOrderRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logge
 
 	_, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS orders (
     	user_uuid uuid NOT NULL,
-        number INTEGER PRIMARY KEY,
+        number BIGINT PRIMARY KEY,
         status TEXT NOT NULL,
         accrual FLOAT NOT NULL DEFAULT 0,
         uploaded_at TIMESTAMP NOT NULL);`)
 	if err != nil {
 		logWith.Error("Failed to create table", log.ErrorField(err))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = db.Exec(ctx, `CREATE INDEX IF NOT EXISTS orders_user_uuid_idx ON orders(user_uuid)`)
+	if err != nil {
+		logWith.Error("Failed to create index", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return storage, nil
@@ -90,25 +95,29 @@ func (r *OrderRepository) GetAllUserOrders(ctx context.Context, userUUID uuid.UU
 		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
 		r.log.StringField("user_uuid", userUUID.String()),
 	)
-	rows, err := r.db.Query(ctx, `SELECT * FROM orders WHERE user_uuid = $1`, userUUID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			log.Info("No orders found")
-			return nil, entity.ErrOrderNotFound
+	rows, _ := r.db.Query(ctx, `SELECT 
+    				user_uuid,
+                    number,
+                    status,
+                    uploaded_at,
+                    accrual FROM orders WHERE user_uuid = $1`, userUUID)
+	defer rows.Close()
+	orders, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (entity.Order, error) {
+		var order entity.Order
+		err := row.Scan(&order.UserUUID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual)
+		if err != nil {
+			log.Error("Failed to scan row", log.ErrorField(err))
+			return entity.Order{}, fmt.Errorf("%s: %w", op, err)
 		}
+		return order, err
+	})
+	if err != nil {
 		log.Error("Failed to get orders", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	defer rows.Close()
-	var orders []entity.Order
-	for rows.Next() {
-		var order entity.Order
-		err = rows.Scan(&order.UserUUID, &order.Number, &order.Status, &order.UploadedAt, &order.Accrual)
-		if err != nil {
-			log.Error("Failed to scan row", log.ErrorField(err))
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-		orders = append(orders, order)
+	if len(orders) == 0 {
+		log.Info("No orders found")
+		return nil, entity.ErrOrderNotFound
 	}
 	return orders, nil
 }

@@ -77,7 +77,7 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 
 		jwtString, err := service.Authenticate(ctx, req.Login, req.Password)
 		if err != nil {
-			if errors.Is(err, entity.ErrUserWrongPassword) {
+			if errors.Is(err, entity.ErrUserWrongPasswordOrLogin) {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

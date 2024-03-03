@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -43,10 +44,10 @@ func (w *BalanceWorker) Run() {
 	}
 	w.balanceService = service.NewBalanceService(w.logger, balanceRepository)
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= 3; i++ {
 		go w.worker()
 	}
-	log.Info("Star 20 balance workers")
+	log.Info("Star 3 balance workers")
 }
 
 // worker is a goroutine that is responsible for processing balance.
@@ -68,6 +69,7 @@ func (w *BalanceWorker) worker() {
 				w.errorChan <- fmt.Errorf("%s: %w", op, err)
 			}
 		default:
+			time.Sleep(1 * time.Second)
 		}
 	}
 }

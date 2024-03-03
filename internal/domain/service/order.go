@@ -92,8 +92,12 @@ func (s *OrderService) Check(ctx context.Context, order entity.Order) (float64, 
 		default:
 			externalOrder, err := s.Client.Check(ctx, order.Number)
 			if err != nil {
-				if errors.Is(err, entity.ErrExternalOrderNotRegistered) || errors.Is(err, entity.ErrExternalOrderRateLimitExceeded) {
-					time.Sleep(61)
+				if errors.Is(err, entity.ErrExternalOrderRateLimitExceeded) {
+					time.Sleep(61 * time.Second)
+					continue
+				}
+				if errors.Is(err, entity.ErrExternalOrderNotRegistered) {
+					time.Sleep(3 * time.Second)
 					continue
 				}
 				return 0, err
@@ -135,7 +139,7 @@ func (s *OrderService) Check(ctx context.Context, order entity.Order) (float64, 
 				}
 				return 0, nil
 			}
-			time.Sleep(3)
+			time.Sleep(3 * time.Second)
 		}
 	}
 }

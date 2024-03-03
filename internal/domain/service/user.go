@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -89,13 +90,16 @@ func (s *UserService) Authenticate(ctx context.Context, login, password string) 
 
 	user, err := s.repository.GetUserByLogin(ctx, login)
 	if err != nil {
+		if errors.Is(err, entity.ErrUserNotFound) {
+			return "", entity.ErrUserWrongPasswordOrLogin
+		}
 		return "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		log.Error("Wrong password", log.ErrorField(err))
-		return "", entity.ErrUserWrongPassword
+		return "", entity.ErrUserWrongPasswordOrLogin
 	}
 
 	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
