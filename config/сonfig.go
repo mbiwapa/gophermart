@@ -16,7 +16,7 @@ type Config struct {
 // MustLoadConfig загрузка конфигурации
 func MustLoadConfig() *Config {
 	var config Config
-	flag.StringVar(&config.Addr, "a", "localhost:8081", "Адрес порт сервера")
+	flag.StringVar(&config.Addr, "a", "localhost:8080", "Адрес порт сервера")
 	flag.StringVar(
 		&config.DB,
 		"d",
@@ -32,7 +32,7 @@ func MustLoadConfig() *Config {
 	flag.StringVar(
 		&config.AccrualAdr,
 		"r",
-		"http://localhost:8080",
+		"http://localhost:8081",
 		"Адрес системы расчёта начислений",
 	)
 	flag.Parse()
