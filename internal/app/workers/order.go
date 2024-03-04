@@ -87,11 +87,7 @@ func (w *OrderWorker) worker() {
 				log.AnyField("bonuses", bonuses),
 			)
 			if bonuses > 0 {
-				w.balanceQueue <- entity.BalanceOperation{
-					Accrual:     bonuses,
-					UserUUID:    order.UserUUID,
-					OrderNumber: order.Number,
-				}
+				w.balanceQueue <- entity.NewBalanceOperation(order.UserUUID, bonuses, 0, order.Number)
 			}
 		}
 	}
