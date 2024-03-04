@@ -23,18 +23,17 @@ func main() {
 	log.Info("Loading configuration...")
 
 	fmt.Println("Hello, World!")
-	err := http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("Hello World!"))
+	s := &http.Server{
+		Addr: ":8080",
+	}
+	go func() {
+		err := s.ListenAndServe()
 		if err != nil {
 			fmt.Println(err)
 		}
-	}))
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-	fmt.Println("Bye bye, World!")
+	}()
 	<-mainCtx.Done()
+	_ = s.Shutdown(context.Background())
 	time.Sleep(3 * time.Second)
 	log.Info("Good bye!")
 
