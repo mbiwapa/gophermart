@@ -3,6 +3,7 @@ package withdrawals
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -63,8 +64,25 @@ func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer U
 			return
 		}
 
-		render.JSON(w, r, balanceOperations)
+		result := make([]Response, 0, len(balanceOperations))
+		for _, t := range balanceOperations {
+			operation := Response{
+				OrderNumber: fmt.Sprintf("%d", t.OrderNumber),
+				Withdrawal:  t.Withdrawal,
+				ProcessedAt: t.ProcessedAt.Format(time.RFC3339),
+			}
+			result = append(result, operation)
+		}
+
+		render.JSON(w, r, result)
 		logWith.Info("Withdrawal operations fetched")
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// Response is a response for showing user's withdrawal operations
+type Response struct {
+	Withdrawal  float64 `json:"sum" validate:"required" example:"100"`
+	OrderNumber string  `json:"order" validate:"required" example:"12312455"`
+	ProcessedAt string  `json:"processed_at" validate:"required" example:"2020-12-10T15:15:45+03:00"`
 }
