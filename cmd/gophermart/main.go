@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
@@ -22,6 +24,14 @@ func main() {
 	log := logger.NewLogger()
 
 	log.Info("Loading configuration...")
+	conf := config.MustLoadConfig()
+	log.Info("Configuration loaded", log.StringField("Addr", conf.Addr), log.StringField("DB", conf.DB), log.StringField("SecretKey", conf.SecretKey), log.StringField("AccrualAddr", conf.AccrualAdr))
+
+	_, err := pgxpool.New(mainCtx, conf.DB)
+	if err != nil {
+		log.Error("Failed to connect to database", log.ErrorField(err))
+		os.Exit(1)
+	}
 
 	fmt.Println("Hello, World!")
 	s := &http.Server{
@@ -33,18 +43,12 @@ func main() {
 			fmt.Println(err)
 		}
 	}()
-	_ = config.MustLoadConfig()
+
 	<-mainCtx.Done()
 	_ = s.Shutdown(context.Background())
 	time.Sleep(3 * time.Second)
 	log.Info("Good bye!")
 
-	//
-	//db, err := pgxpool.New(mainCtx, conf.DB)
-	//if err != nil {
-	//	log.Error("Failed to connect to database", log.ErrorField(err))
-	//	os.Exit(1)
-	//}
 	//go func() {
 	//	<-mainCtx.Done()
 	//	log.Info("Closing database connection...")
