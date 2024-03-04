@@ -46,7 +46,7 @@ func New(ctx context.Context, config *config.Config, logger *logger.Logger, orde
 
 	server := &HTTPServer{
 		server: &http.Server{
-			Addr: config.Addr,
+			Addr: ":8080",
 			BaseContext: func(_ net.Listener) context.Context {
 				return ctx
 			},
