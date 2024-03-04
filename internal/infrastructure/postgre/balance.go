@@ -144,29 +144,26 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, operation entity.Balan
 		log.Error("Failed to begin transaction", log.ErrorField(err))
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			log.Error("Failed to rollback transaction", log.ErrorField(err))
-		}
-	}(tx, ctx)
 
 	var current float64
 	balance := tx.QueryRow(ctx, `SELECT current FROM user_balances WHERE user_uuid = $1 FOR UPDATE`, operation.UserUUID)
 	err = balance.Scan(&current)
 	if err != nil {
 		log.Error("Failed to get current balance", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	if current < operation.Withdrawal {
 		log.Error("Insufficient funds in the account")
+		r.rollback(tx, ctx)
 		return entity.ErrBalanceInsufficientFunds
 	}
 
 	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = current - $1 WHERE user_uuid = $2`, operation.Withdrawal, operation.UserUUID)
 	if err != nil {
 		log.Error("Failed to update balance", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	_, err = tx.Exec(ctx, `INSERT INTO balance_operations (
@@ -185,11 +182,13 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, operation entity.Balan
 		operation.UUID)
 	if err != nil {
 		log.Error("Failed to create balance operation", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Error("Failed to commit transaction", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
@@ -211,24 +210,20 @@ func (r *BalanceRepository) Accrue(ctx context.Context, operation entity.Balance
 		log.Error("Failed to begin transaction", log.ErrorField(err))
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			log.Error("Failed to rollback transaction", log.ErrorField(err))
-		}
-	}(tx, ctx)
 
 	var current float64
 	balance := tx.QueryRow(ctx, `SELECT current FROM user_balances WHERE user_uuid = $1 FOR UPDATE`, operation.UserUUID)
 	err = balance.Scan(&current)
 	if err != nil {
 		log.Error("Failed to get current balance", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = current + $1 WHERE user_uuid = $2`, operation.Accrual, operation.UserUUID)
 	if err != nil {
 		log.Error("Failed to update balance", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	_, err = tx.Exec(ctx, `INSERT INTO balance_operations (
@@ -247,12 +242,26 @@ func (r *BalanceRepository) Accrue(ctx context.Context, operation entity.Balance
 		operation.UUID)
 	if err != nil {
 		log.Error("Failed to create balance operation", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	err = tx.Commit(ctx)
 	if err != nil {
 		log.Error("Failed to commit transaction", log.ErrorField(err))
+		r.rollback(tx, ctx)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
+}
+
+func (r *BalanceRepository) rollback(tx pgx.Tx, ctx context.Context) {
+	const op = "infrastructure.postgre.BalanceRepository.rollback"
+	log := r.log.With(
+		r.log.StringField("op", op),
+		r.log.StringField("request_id", contexter.GetRequestID(ctx)),
+	)
+	err := tx.Rollback(ctx)
+	if err != nil {
+		log.Error("Failed to rollback transaction", log.ErrorField(err))
+	}
 }
