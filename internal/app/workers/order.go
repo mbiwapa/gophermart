@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -56,7 +55,7 @@ func (w *OrderWorker) Run() {
 	for i := 1; i <= 3; i++ {
 		go w.worker()
 	}
-	log.Info("Star 3 order workers")
+	log.Info("Start 3 order workers")
 }
 
 // worker is a goroutine that is responsible for processing orders.
@@ -94,8 +93,6 @@ func (w *OrderWorker) worker() {
 					OrderNumber: order.Number,
 				}
 			}
-		default:
-			time.Sleep(1 * time.Second)
 		}
 	}
 }

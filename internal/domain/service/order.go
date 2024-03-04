@@ -102,7 +102,7 @@ func (s *OrderService) Check(ctx context.Context, order entity.Order) (float64, 
 					continue
 				}
 				if errors.Is(err, entity.ErrExternalOrderNotRegistered) {
-					time.Sleep(3 * time.Second)
+					time.Sleep(100 * time.Millisecond)
 					continue
 				}
 				return 0, err
@@ -144,7 +144,7 @@ func (s *OrderService) Check(ctx context.Context, order entity.Order) (float64, 
 				}
 				return 0, nil
 			}
-			time.Sleep(3 * time.Second)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
