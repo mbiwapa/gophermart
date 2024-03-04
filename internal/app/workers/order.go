@@ -76,6 +76,7 @@ func (w *OrderWorker) worker() {
 			reqID := "req_order" + fmt.Sprintf("%d", order.Number)
 			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
 
+			log.Info("Processing order", log.AnyField("order_number", order.Number), log)
 			bonuses, err := w.orderService.Check(ctx, order)
 			if err != nil {
 				w.errorChan <- fmt.Errorf("%s: %w", op, err)

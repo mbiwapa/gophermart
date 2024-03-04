@@ -35,6 +35,7 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 	log := c.logger.With(c.logger.StringField("op", op))
 
 	req, err := http.NewRequestWithContext(ctx, "GET", c.url+path, nil)
+	log.Info("Send order request", log.AnyField("path", c.url+path))
 	if err != nil {
 		log.Error("Cant create request", log.ErrorField(err))
 		return nil, err
@@ -63,7 +64,10 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		if resp.StatusCode == http.StatusTooManyRequests {
 			return nil, entity.ErrExternalOrderRateLimitExceeded
 		}
-		return nil, fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, entity.ErrExternalOrderNotRegistered
+		}
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
