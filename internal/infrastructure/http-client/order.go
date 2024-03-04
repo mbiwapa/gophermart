@@ -44,18 +44,11 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	//nolint
 	resp, err := c.client.Do(req)
 	if err != nil {
 		log.Error("Failed to send request", log.ErrorField(err))
 		return nil, err
 	}
-	defer func(resp *http.Response) {
-		err = resp.Body.Close()
-		if err != nil {
-			log.Error("Failed to close response body", log.ErrorField(err))
-		}
-	}(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		log.Info("No response", log.AnyField("code", resp.StatusCode))
@@ -65,9 +58,6 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		if resp.StatusCode == http.StatusTooManyRequests {
 			return nil, entity.ErrExternalOrderRateLimitExceeded
 		}
-		//if resp.StatusCode == http.StatusNotFound {
-		//	return nil, entity.ErrExternalOrderNotRegistered
-		//}
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
@@ -75,6 +65,10 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 	if err != nil {
 		log.Error("Cant  read response", log.ErrorField(err))
 		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		log.Error("Failed to close response body", log.ErrorField(err))
 	}
 	return bodyBytes, nil
 
