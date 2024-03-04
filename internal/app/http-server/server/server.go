@@ -135,7 +135,6 @@ func (s *HTTPServer) newRouter() http.Handler {
 
 	//Only for authenticated users
 	r.Group(func(r chi.Router) {
-		//r.Use(authorize.New(s.logger, s.userService)) //FIXME  почему запускается 2 раза?
 		r.Post("/api/user/orders", orders.NewAdder(s.logger, s.orderService, s.userService))
 		r.Get("/api/user/orders", orders.NewAllGetter(s.logger, s.orderService, s.userService))
 		r.Get("/api/user/balance", balance.New(s.logger, s.balanceService, s.userService))

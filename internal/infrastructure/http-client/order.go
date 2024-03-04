@@ -44,6 +44,7 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
+	//nolint
 	resp, err := c.client.Do(req)
 	if err != nil {
 		log.Error("Failed to send request", log.ErrorField(err))
