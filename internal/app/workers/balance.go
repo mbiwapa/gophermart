@@ -11,6 +11,7 @@ import (
 	"github.com/mbiwapa/gophermart.git/internal/domain/entity"
 	"github.com/mbiwapa/gophermart.git/internal/domain/service"
 	"github.com/mbiwapa/gophermart.git/internal/infrastructure/postgre"
+	"github.com/mbiwapa/gophermart.git/internal/lib/contexter"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
@@ -63,7 +64,10 @@ func (w *BalanceWorker) worker() {
 				w.errorChan <- fmt.Errorf("balance queue is closed")
 				return
 			}
-			err := w.balanceService.Execute(w.ctx, operation)
+			reqID := "req_order" + fmt.Sprintf("%d", operation.OrderNumber)
+			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
+
+			err := w.balanceService.Execute(ctx, operation)
 			log.Info("Update balance", log.ErrorField(err))
 			if err != nil {
 				w.errorChan <- fmt.Errorf("%s: %w", op, err)

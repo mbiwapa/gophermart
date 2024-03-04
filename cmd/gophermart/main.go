@@ -30,9 +30,9 @@ func main() {
 	db, err := pgxpool.New(mainCtx, conf.DB)
 	if err != nil {
 		log.Error("Failed to connect to database", log.ErrorField(err))
-		os.Exit(1)
+		//os.Exit(1)
 	}
-	defer db.Close()
+	//defer db.Close()
 
 	log.Info("Create order queue chanel...")
 	orderQueue := make(chan entity.Order, 100)
@@ -48,7 +48,7 @@ func main() {
 	go func() {
 		for orderErr := range errorChan {
 			log.Error("Error in order worker", log.ErrorField(orderErr))
-			os.Exit(1)
+			//os.Exit(1)
 		}
 		log.Info("Error chanel is closed")
 	}()
@@ -57,7 +57,7 @@ func main() {
 	srv, err := server.New(mainCtx, conf, log, orderQueue, db)
 	if err != nil {
 		log.Error("Failed to create HTTP server", log.ErrorField(err))
-		os.Exit(1)
+		//os.Exit(1)
 	}
 	srv.Run()
 
