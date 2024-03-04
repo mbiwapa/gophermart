@@ -27,11 +27,16 @@ func main() {
 	conf := config.MustLoadConfig()
 	log.Info("Configuration loaded", log.StringField("Addr", conf.Addr), log.StringField("DB", conf.DB), log.StringField("SecretKey", conf.SecretKey), log.StringField("AccrualAddr", conf.AccrualAdr))
 
-	_, err := pgxpool.New(mainCtx, conf.DB)
+	db, err := pgxpool.New(mainCtx, conf.DB)
 	if err != nil {
 		log.Error("Failed to connect to database", log.ErrorField(err))
 		os.Exit(1)
 	}
+	go func() {
+		<-mainCtx.Done()
+		log.Info("Closing database connection...")
+		db.Close()
+	}()
 
 	fmt.Println("Hello, World!")
 	s := &http.Server{
@@ -49,11 +54,6 @@ func main() {
 	time.Sleep(3 * time.Second)
 	log.Info("Good bye!")
 
-	//go func() {
-	//	<-mainCtx.Done()
-	//	log.Info("Closing database connection...")
-	//	db.Close()
-	//}()
 	//
 	//log.Info("Create order queue chanel...")
 	//orderQueue := make(chan entity.Order, 100)

@@ -17,7 +17,7 @@ type Config struct {
 func MustLoadConfig() *Config {
 	var config Config
 	config.SecretKey = "22gwiT5#eQxdh89OJZM-9af=LDB^EIJsW7Bbv90s1L^U.O7jNu8OrEhWLM.zJFUk"
-	flag.StringVar(&config.Addr, "a", "localhost:8080", "Адрес порт сервера")
+	flag.StringVar(&config.Addr, "a", "localhost:8081", "Адрес порт сервера")
 	flag.StringVar(
 		&config.DB,
 		"d",
@@ -27,7 +27,7 @@ func MustLoadConfig() *Config {
 	flag.StringVar(
 		&config.AccrualAdr,
 		"r",
-		"htt://localhost:8080",
+		"http://localhost:8080",
 		"Адрес системы расчёта начислений",
 	)
 	flag.Parse()
