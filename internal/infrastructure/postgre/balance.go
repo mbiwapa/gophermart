@@ -31,8 +31,8 @@ func (r *BalanceRepository) Migrate(ctx context.Context) error {
 	log := r.log.With(r.log.StringField("op", op))
 	_, err := r.db.Exec(ctx, `CREATE TABLE IF NOT EXISTS user_balances (
         user_uuid uuid PRIMARY KEY NOT NULL,
-        current INTEGER NOT NULL,
-        withdraw INTEGER NOT NULL);`)
+        current DOUBLE PRECISION NOT NULL DEFAULT 0,
+        withdraw DOUBLE PRECISION NOT NULL DEFAULT 0);`)
 	if err != nil {
 		log.Error("Failed to create table user_balances", log.ErrorField(err))
 		return fmt.Errorf("%s: %w", op, err)
@@ -40,9 +40,9 @@ func (r *BalanceRepository) Migrate(ctx context.Context) error {
 	_, err = r.db.Exec(ctx, `CREATE TABLE IF NOT EXISTS balance_operations (
         uuid uuid PRIMARY KEY NOT NULL,
         user_uuid uuid NOT NULL,
-        accrual INTEGER NOT NULL,
-        withdrawal INTEGER NOT NULL,
-        order_number INTEGER NOT NULL,
+        accrual DOUBLE PRECISION NOT NULL DEFAULT 0,
+        withdrawal DOUBLE PRECISION NOT NULL DEFAULT 0,
+        order_number BIGINT NOT NULL,
         processed_at TIMESTAMP NOT NULL)`)
 	if err != nil {
 		log.Error("Failed to create table balance_operations", log.ErrorField(err))

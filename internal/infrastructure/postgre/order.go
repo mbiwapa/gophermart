@@ -35,7 +35,7 @@ func (r *OrderRepository) Migrate(ctx context.Context) error {
     	user_uuid uuid NOT NULL,
         number BIGINT PRIMARY KEY,
         status TEXT NOT NULL,
-        accrual FLOAT NOT NULL DEFAULT 0,
+        accrual DOUBLE PRECISION NOT NULL DEFAULT 0,
         uploaded_at TIMESTAMP NOT NULL);`)
 	if err != nil {
 		log.Error("Failed to create table", log.ErrorField(err))
