@@ -49,13 +49,9 @@ func (w *OrderWorker) Run() {
 		os.Exit(1)
 	}
 
-	orderRepository, err := postgre.NewOrderRepository(w.ctx, w.db, w.logger)
-	if err != nil {
-		log.Error("Failed to create order repository", log.ErrorField(err))
-		os.Exit(1)
-	}
+	orderRepository := postgre.NewOrderRepository(w.db, w.logger)
 	w.orderService = service.NewOrderService(w.logger, w.orderQueue, orderRepository)
-	w.orderService.Client = client
+	w.orderService.SetClient(client)
 
 	for i := 1; i <= 3; i++ {
 		go w.worker()

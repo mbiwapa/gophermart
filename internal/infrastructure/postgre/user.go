@@ -22,23 +22,27 @@ type UserRepository struct {
 }
 
 // NewUserRepository returns a new postgre user repository
-func NewUserRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logger) (*UserRepository, error) {
-	const op = "infrastructure.postgre.NewUserRepository"
-
+func NewUserRepository(db *pgxpool.Pool, log *logger.Logger) *UserRepository {
 	storage := &UserRepository{db: db, log: log}
+	return storage
+}
 
-	logWith := log.With(log.StringField("op", op))
+// Migrate migrates the database
+func (r *UserRepository) Migrate(ctx context.Context) error {
+	const op = "infrastructure.postgre.UserRepository.Migrate"
 
-	_, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
-		uuid UUID PRIMARY KEY,
+	log := r.log.With(r.log.StringField("op", op))
+
+	_, err := r.db.Exec(ctx, `CREATE TABLE IF NOT EXISTS users (
+        uuid UUID PRIMARY KEY,
         login TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL);`)
 	if err != nil {
-		logWith.Error("Failed to create table", log.ErrorField(err))
-		return nil, fmt.Errorf("%s: %w", op, err)
+		log.Error("Failed to create table", log.ErrorField(err))
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return storage, nil
+	return nil
 }
 
 // GetUserByLogin returns a user by login.

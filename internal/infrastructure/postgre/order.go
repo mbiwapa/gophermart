@@ -22,23 +22,31 @@ type OrderRepository struct {
 }
 
 // NewOrderRepository returns a new postgre user repository
-func NewOrderRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logger) (*OrderRepository, error) {
-	const op = "infrastructure.postgre.NewOrderRepository"
-	logWith := log.With(log.StringField("op", op))
-
+func NewOrderRepository(db *pgxpool.Pool, log *logger.Logger) *OrderRepository {
 	storage := &OrderRepository{db: db, log: log}
+	return storage
+}
 
-	_, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS orders (
+// Migrate migrates the database
+func (r *OrderRepository) Migrate(ctx context.Context) error {
+	const op = "infrastructure.postgre.OrderRepository.Migrate"
+	log := r.log.With(r.log.StringField("op", op))
+	_, err := r.db.Exec(ctx, `CREATE TABLE IF NOT EXISTS orders (
     	user_uuid uuid NOT NULL,
         number BIGINT PRIMARY KEY,
         status TEXT NOT NULL,
         accrual FLOAT NOT NULL DEFAULT 0,
         uploaded_at TIMESTAMP NOT NULL);`)
 	if err != nil {
-		logWith.Error("Failed to create table", log.ErrorField(err))
-		return nil, fmt.Errorf("%s: %w", op, err)
+		log.Error("Failed to create table", log.ErrorField(err))
+		return fmt.Errorf("%s: %w", op, err)
 	}
-	return storage, nil
+	_, err = r.db.Exec(ctx, `CREATE INDEX IF NOT EXISTS orders_user_uuid_idx ON orders(user_uuid)`)
+	if err != nil {
+		log.Error("Failed to create index", log.ErrorField(err))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }
 
 // AddOrderForUser adds a new order to the user.

@@ -27,7 +27,7 @@ type OrderClient interface {
 type OrderService struct {
 	repository OrderRepository
 	logger     *logger.Logger
-	Client     OrderClient
+	client     OrderClient
 	orderQueue chan entity.Order
 }
 
@@ -38,6 +38,11 @@ func NewOrderService(logger *logger.Logger, orderQueue chan entity.Order, reposi
 		logger:     logger,
 		orderQueue: orderQueue,
 	}
+}
+
+// SetClient sets the client for the order service.
+func (s *OrderService) SetClient(client OrderClient) {
+	s.client = client
 }
 
 // Add adds a new order for a user.
@@ -90,7 +95,7 @@ func (s *OrderService) Check(ctx context.Context, order entity.Order) (float64, 
 			log.Info("Context is done")
 			return 0, ctx.Err()
 		default:
-			externalOrder, err := s.Client.Check(ctx, order.Number)
+			externalOrder, err := s.client.Check(ctx, order.Number)
 			if err != nil {
 				if errors.Is(err, entity.ErrExternalOrderRateLimitExceeded) {
 					time.Sleep(61 * time.Second)

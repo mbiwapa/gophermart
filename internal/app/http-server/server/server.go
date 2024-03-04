@@ -65,19 +65,22 @@ func (s *HTTPServer) Run() {
 	const op = "internal.app.http-server.server.Run"
 	log := s.logger.With(s.logger.StringField("op", op))
 	go func() {
-		userRepository, err := postgre.NewUserRepository(s.ctx, s.db, s.logger)
+		userRepository := postgre.NewUserRepository(s.db, s.logger)
+		err := userRepository.Migrate(s.ctx)
 		if err != nil {
-			log.Error("Failed to create user repository", log.ErrorField(err))
+			log.Error("Failed to migrate user repository", log.ErrorField(err))
 			os.Exit(1)
 		}
-		orderRepository, err := postgre.NewOrderRepository(s.ctx, s.db, s.logger)
+		orderRepository := postgre.NewOrderRepository(s.db, s.logger)
+		err = orderRepository.Migrate(s.ctx)
 		if err != nil {
-			log.Error("Failed to create order repository", log.ErrorField(err))
+			log.Error("Failed to migrate order repository", log.ErrorField(err))
 			os.Exit(1)
 		}
-		balanceRepository, err := postgre.NewBalanceRepository(s.ctx, s.db, s.logger)
+		balanceRepository := postgre.NewBalanceRepository(s.db, s.logger)
+		err = balanceRepository.Migrate(s.ctx)
 		if err != nil {
-			log.Error("Failed to create balance repository", log.ErrorField(err))
+			log.Error("Failed to migrate balance repository", log.ErrorField(err))
 			os.Exit(1)
 		}
 

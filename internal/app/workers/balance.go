@@ -3,7 +3,6 @@ package workers
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -38,11 +37,7 @@ func (w *BalanceWorker) Run() {
 	const op = "app.workers.BalanceWorker.Run"
 	log := w.logger.With(w.logger.StringField("op", op))
 
-	balanceRepository, err := postgre.NewBalanceRepository(w.ctx, w.db, w.logger)
-	if err != nil {
-		log.Error("Failed to create balance repository", log.ErrorField(err))
-		os.Exit(1)
-	}
+	balanceRepository := postgre.NewBalanceRepository(w.db, w.logger)
 	w.balanceService = service.NewBalanceService(w.logger, balanceRepository)
 
 	for i := 1; i <= 3; i++ {
