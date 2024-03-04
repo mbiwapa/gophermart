@@ -89,7 +89,7 @@ func (r *BalanceRepository) GetWithdrawOperations(ctx context.Context, userUUID 
 										WHERE 
 										    user_uuid = $1 
 										  AND 
-										    withdrawal > 0`)
+										    withdrawal > 0`, userUUID)
 	if err != nil {
 		log.Error("Failed to get withdraw operations", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
