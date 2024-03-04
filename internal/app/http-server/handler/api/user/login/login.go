@@ -61,7 +61,7 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 		var req Request
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
-			logWith.Error("Failed to decode request body", log.ErrorField(err))
+			logWith.Info("Failed to decode request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -70,7 +70,7 @@ func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 		logWith.Info("Request decoded", log.AnyField("login", req.Login))
 
 		if err := validator.New().Struct(req); err != nil {
-			logWith.Error("Failed to validate request body", log.ErrorField(err))
+			logWith.Info("Failed to validate request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

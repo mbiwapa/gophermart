@@ -57,7 +57,7 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		log.Error("No response", log.AnyField("code", resp.StatusCode))
+		log.Info("No response", log.AnyField("code", resp.StatusCode))
 		if resp.StatusCode == http.StatusNoContent {
 			return nil, entity.ErrExternalOrderNotRegistered
 		}

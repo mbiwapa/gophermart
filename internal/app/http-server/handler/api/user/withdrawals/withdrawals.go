@@ -48,7 +48,7 @@ func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer U
 
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
 		if err != nil {
-			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			logWith.Info("Failed to authorize request", log.ErrorField(err))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

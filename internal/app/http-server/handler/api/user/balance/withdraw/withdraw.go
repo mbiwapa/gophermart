@@ -53,7 +53,7 @@ func New(log *logger.Logger, executor BalanceOperationExecutor, authorizer UserA
 
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
 		if err != nil {
-			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			logWith.Info("Failed to authorize request", log.ErrorField(err))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -61,18 +61,18 @@ func New(log *logger.Logger, executor BalanceOperationExecutor, authorizer UserA
 		var request Request
 		err = render.DecodeJSON(r.Body, &request)
 		if err != nil {
-			logWith.Error("Failed to decode request body", log.ErrorField(err))
+			logWith.Info("Failed to decode request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if err := validator.New().Struct(request); err != nil {
-			logWith.Error("Failed to validate request body", log.ErrorField(err))
+			logWith.Info("Failed to validate request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		if luna.Valid(request.OrderNumber) == false {
-			logWith.Error("Invalid order number", log.AnyField("order_id", request.OrderNumber))
+			logWith.Info("Invalid order number", log.AnyField("order_id", request.OrderNumber))
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}

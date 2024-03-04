@@ -58,7 +58,7 @@ func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*ent
 	err := r.db.QueryRow(ctx, `SELECT uuid, login, password_hash FROM users WHERE login = $1`, login).Scan(&user.UUID, &user.Login, &user.PasswordHash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("User not found", log.StringField("user_login", login))
+			log.Info("User not found", log.StringField("user_login", login))
 			return nil, entity.ErrUserNotFound
 		}
 		log.Error("Failed to get user by login", log.ErrorField(err))
@@ -107,7 +107,7 @@ func (r *UserRepository) GetUserByUUID(ctx context.Context, userUUID uuid.UUID) 
 	err := r.db.QueryRow(ctx, `SELECT uuid, login, password_hash FROM users WHERE uuid = $1`, userUUID).Scan(&user.UUID, &user.Login, &user.PasswordHash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Error("User not found", log.StringField("user_uuid", userUUID.String()))
+			log.Info("User not found", log.StringField("user_uuid", userUUID.String()))
 			return nil, entity.ErrUserNotFound
 		}
 		log.Error("Failed to get user by UUID", log.ErrorField(err))

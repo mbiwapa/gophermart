@@ -40,7 +40,7 @@ func New(log *logger.Logger, service UserAuthorizer) func(next http.Handler) htt
 
 			jwtString := r.Header.Get("Authorization")
 			if jwtString == "" {
-				logWith.Error("Authorization header is not set")
+				logWith.Info("Authorization header is not set")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

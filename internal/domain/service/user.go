@@ -98,7 +98,7 @@ func (s *UserService) Authenticate(ctx context.Context, login, password string) 
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		log.Error("Wrong password", log.ErrorField(err))
+		log.Info("Wrong password", log.ErrorField(err))
 		return "", entity.ErrUserWrongPasswordOrLogin
 	}
 
@@ -120,7 +120,7 @@ func (s *UserService) Authorize(ctx context.Context, token string) (*entity.User
 
 	userUUID, err := tool.CheckJWT(token, s.secretKey)
 	if err != nil || userUUID == uuid.Nil {
-		log.Error("Invalid JWT", log.ErrorField(err))
+		log.Info("Invalid JWT", log.ErrorField(err))
 		return nil, err
 	}
 

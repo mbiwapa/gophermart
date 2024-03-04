@@ -50,7 +50,7 @@ func NewAdder(log *logger.Logger, adder OrderAdder, authorizer UserAuthorizer) h
 
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
 		if err != nil {
-			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			logWith.Info("Failed to authorize request", log.ErrorField(err))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -58,13 +58,13 @@ func NewAdder(log *logger.Logger, adder OrderAdder, authorizer UserAuthorizer) h
 		var orderID int
 		err = render.DecodeJSON(r.Body, &orderID)
 		if err != nil {
-			logWith.Error("Failed to decode request body", log.ErrorField(err))
+			logWith.Info("Failed to decode request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		if luna.Valid(orderID) == false {
-			logWith.Error("Invalid order number", log.AnyField("order_id", orderID))
+			logWith.Info("Invalid order number", log.AnyField("order_id", orderID))
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
@@ -117,7 +117,7 @@ func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAut
 
 		user, err := authorizer.Authorize(ctx, r.Header.Get("Authorization"))
 		if err != nil {
-			logWith.Error("Failed to authorize request", log.ErrorField(err))
+			logWith.Info("Failed to authorize request", log.ErrorField(err))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
