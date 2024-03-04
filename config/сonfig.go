@@ -32,7 +32,7 @@ func MustLoadConfig() *Config {
 	flag.StringVar(
 		&config.AccrualAdr,
 		"r",
-		"http://localhost:8081",
+		"htt://localhost:8080",
 		"Адрес системы расчёта начислений",
 	)
 	flag.Parse()
