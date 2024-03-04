@@ -160,7 +160,8 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, operation entity.Balan
 		return entity.ErrBalanceInsufficientFunds
 	}
 
-	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = current - $1 WHERE user_uuid = $2`, operation.Withdrawal, operation.UserUUID)
+	newBalance := current - operation.Withdrawal
+	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = $1 WHERE user_uuid = $2`, newBalance, operation.UserUUID)
 	if err != nil {
 		log.Error("Failed to update balance", log.ErrorField(err))
 		r.rollback(tx, ctx)
