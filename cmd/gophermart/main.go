@@ -26,7 +26,6 @@ func main() {
 
 	log.Info("Loading configuration...")
 	conf := config.MustLoadConfig()
-	log.Info("Configuration loaded", log.StringField("Addr", conf.Addr), log.StringField("DB", conf.DB), log.StringField("SecretKey", conf.SecretKey), log.StringField("AccrualAddr", conf.AccrualAdr))
 
 	db, err := pgxpool.New(mainCtx, conf.DB)
 	if err != nil {
@@ -39,16 +38,6 @@ func main() {
 		db.Close()
 	}()
 
-	//fmt.Println("Hello, World!")
-	//s := &http.Server{
-	//	Addr: ":8080",
-	//}
-	//go func() {
-	//	err := s.ListenAndServe()
-	//	if err != nil {
-	//		fmt.Println(err)
-	//	}
-	//}()
 	log.Info("Create order queue chanel...")
 	orderQueue := make(chan entity.Order, 100)
 	defer close(orderQueue)
@@ -83,7 +72,6 @@ func main() {
 	balanceWorker.Run()
 
 	<-mainCtx.Done()
-	//_ = s.Shutdown(context.Background())
 	time.Sleep(3 * time.Second)
 	log.Info("Good bye!")
 }

@@ -64,6 +64,7 @@ func (w *BalanceWorker) worker() {
 				w.errorChan <- fmt.Errorf("balance queue is closed")
 				return
 			}
+			//TODO что-то получше сделать
 			reqID := "req_order" + fmt.Sprintf("%d", operation.OrderNumber)
 			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
 

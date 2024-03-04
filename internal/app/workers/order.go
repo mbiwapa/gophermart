@@ -76,7 +76,7 @@ func (w *OrderWorker) worker() {
 				w.errorChan <- fmt.Errorf("order queue is closed")
 				return
 			}
-
+			//TODO что-то получше сделать
 			reqID := "req_order" + fmt.Sprintf("%d", order.Number)
 			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
 

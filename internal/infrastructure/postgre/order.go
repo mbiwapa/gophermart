@@ -38,11 +38,6 @@ func NewOrderRepository(ctx context.Context, db *pgxpool.Pool, log *logger.Logge
 		logWith.Error("Failed to create table", log.ErrorField(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	_, err = db.Exec(ctx, `CREATE INDEX IF NOT EXISTS orders_user_uuid_idx ON orders(user_uuid)`)
-	if err != nil {
-		logWith.Error("Failed to create index", log.ErrorField(err))
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
 	return storage, nil
 }
 
