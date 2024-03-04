@@ -1,19 +1,33 @@
 package main
 
 import (
-	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
+	"fmt"
+	"net/http"
 )
 
 // run swag init -g internal/app/http-server/server/server.go to generate swagger docs
 // run swag fmt -g internal/app/http-server/server/server.go to format swagger docs
 func main() {
+	fmt.Println("Hello, World!")
+	err := http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("Hello World!"))
+		if err != nil {
+			fmt.Println(err)
+		}
+	}))
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	fmt.Println("Bye bye, World!")
+
 	//time.Sleep(3 * time.Second)
 	//mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	//defer stop()
-
-	log := logger.NewLogger()
-
-	log.Info("Loading configuration...")
+	//
+	//log := logger.NewLogger()
+	//
+	//log.Info("Loading configuration...")
 	//conf := config.MustLoadConfig()
 	//
 	//db, err := pgxpool.New(mainCtx, conf.DB)
@@ -62,5 +76,5 @@ func main() {
 	//
 	//<-mainCtx.Done()
 	//time.Sleep(3 * time.Second)
-	log.Info("Good bye!")
+	//log.Info("Good bye!")
 }
