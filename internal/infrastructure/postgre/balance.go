@@ -42,7 +42,7 @@ func (r *BalanceRepository) Migrate(ctx context.Context) error {
         user_uuid uuid NOT NULL,
         accrual DOUBLE PRECISION NOT NULL DEFAULT 0,
         withdrawal DOUBLE PRECISION NOT NULL DEFAULT 0,
-        order_number BIGINT NOT NULL,
+        order_number BIGINT NOT NULL UNIQUE,
         processed_at TIMESTAMP NOT NULL)`)
 	if err != nil {
 		log.Error("Failed to create table balance_operations", log.ErrorField(err))

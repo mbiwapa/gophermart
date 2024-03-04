@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -32,7 +33,7 @@ type UserAuthorizer interface {
 
 // Request is a struct for request withdrawing money from the user's balance.
 type Request struct {
-	OrderNumber int     `json:"order" validate:"required" example:"12312455"`
+	OrderNumber string  `json:"order" validate:"required" example:"12312455"`
 	Sum         float64 `json:"sum" validate:"required" example:"100"`
 }
 
@@ -71,13 +72,21 @@ func New(log *logger.Logger, executor BalanceOperationExecutor, authorizer UserA
 			return
 		}
 
-		if luna.Valid(request.OrderNumber) == false {
+		var orderNumber int
+		orderNumber, err = strconv.Atoi(request.OrderNumber)
+		if err != nil {
 			logWith.Info("Invalid order number", log.AnyField("order_id", request.OrderNumber))
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
 
-		operation := entity.NewBalanceOperation(user.UUID, 0, request.Sum, request.OrderNumber)
+		if luna.Valid(orderNumber) == false {
+			logWith.Info("Invalid order number", log.AnyField("order_id", request.OrderNumber))
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		}
+
+		operation := entity.NewBalanceOperation(user.UUID, 0, request.Sum, orderNumber)
 		err = executor.Execute(ctx, operation)
 		if err != nil {
 			if errors.Is(err, entity.ErrBalanceInsufficientFunds) {
