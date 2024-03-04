@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // run swag init -g internal/app/http-server/server/server.go to generate swagger docs
 // run swag fmt -g internal/app/http-server/server/server.go to format swagger docs
 func main() {
+	_, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	fmt.Println("Hello, World!")
 	err := http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("Hello World!"))
@@ -20,10 +27,6 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Bye bye, World!")
-
-	//time.Sleep(3 * time.Second)
-	//mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	//defer stop()
 	//
 	//log := logger.NewLogger()
 	//
