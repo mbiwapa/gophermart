@@ -62,8 +62,8 @@ func (w *BalanceWorker) worker() {
 			reqID := "req_order" + fmt.Sprintf("%d", operation.OrderNumber)
 			ctx := context.WithValue(w.ctx, contexter.RequestID, reqID)
 
+			log.Info("Update balance", log.AnyField("add", operation.Accrual))
 			err := w.balanceService.Execute(ctx, operation)
-			log.Info("Update balance", log.ErrorField(err))
 			if err != nil {
 				w.errorChan <- fmt.Errorf("%s: %w", op, err)
 			}
