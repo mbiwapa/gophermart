@@ -51,8 +51,8 @@ func main() {
 	defer close(errorChan)
 	go func() {
 		for orderErr := range errorChan {
-			log.Error("Error in order worker", log.ErrorField(orderErr))
-			os.Exit(1)
+			log.Error("Error in worker", log.ErrorField(orderErr))
+			//os.Exit(1)
 		}
 		log.Info("Error chanel is closed")
 	}()

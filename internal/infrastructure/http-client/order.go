@@ -63,7 +63,7 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		if resp.StatusCode == http.StatusTooManyRequests {
 			return nil, entity.ErrExternalOrderRateLimitExceeded
 		}
-		return nil, err
+		return nil, fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
@@ -81,7 +81,8 @@ func (c *OrderClient) Check(ctx context.Context, number int) (entity.Order, erro
 	log := c.logger.With(c.logger.StringField("op", op))
 
 	stringNumber := fmt.Sprintf("%d", number)
-	path := "/api/orders/" + stringNumber
+	path := c.url + "/api/orders/" + stringNumber
+	log.Info("Send request", log.StringField("path", path))
 	bodyBytes, err := c.get(ctx, path)
 	if err != nil {
 		return entity.Order{}, err
