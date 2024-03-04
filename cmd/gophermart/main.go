@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/mbiwapa/gophermart.git/config"
 	"github.com/mbiwapa/gophermart.git/internal/lib/logger"
 )
 
@@ -32,12 +33,12 @@ func main() {
 			fmt.Println(err)
 		}
 	}()
+	_ = config.MustLoadConfig()
 	<-mainCtx.Done()
 	_ = s.Shutdown(context.Background())
 	time.Sleep(3 * time.Second)
 	log.Info("Good bye!")
 
-	//conf := config.MustLoadConfig()
 	//
 	//db, err := pgxpool.New(mainCtx, conf.DB)
 	//if err != nil {
