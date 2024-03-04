@@ -146,8 +146,9 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, operation entity.Balan
 	}
 
 	var current float64
-	balance := tx.QueryRow(ctx, `SELECT current FROM user_balances WHERE user_uuid = $1 FOR UPDATE`, operation.UserUUID)
-	err = balance.Scan(&current)
+	var withdrawn float64
+	balance := tx.QueryRow(ctx, `SELECT current, withdraw FROM user_balances WHERE user_uuid = $1 FOR UPDATE`, operation.UserUUID)
+	err = balance.Scan(&current, &withdrawn)
 	if err != nil {
 		log.Error("Failed to get current balance", log.ErrorField(err))
 		r.rollback(tx, ctx)
@@ -161,7 +162,7 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, operation entity.Balan
 	}
 
 	newBalance := current - operation.Withdrawal
-	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = $1 WHERE user_uuid = $2`, newBalance, operation.UserUUID)
+	_, err = tx.Exec(ctx, `UPDATE user_balances SET current = $1, withdraw = withdraw + $2 WHERE user_uuid = $3`, newBalance, operation.Withdrawal, operation.UserUUID)
 	if err != nil {
 		log.Error("Failed to update balance", log.ErrorField(err))
 		r.rollback(tx, ctx)
