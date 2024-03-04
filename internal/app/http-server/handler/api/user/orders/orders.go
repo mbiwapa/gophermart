@@ -63,7 +63,7 @@ func NewAdder(log *logger.Logger, adder OrderAdder, authorizer UserAuthorizer) h
 			return
 		}
 
-		if luna.Valid(orderID) == false {
+		if !luna.Valid(orderID) {
 			logWith.Info("Invalid order number", log.AnyField("order_id", orderID))
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return

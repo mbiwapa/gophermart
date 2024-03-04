@@ -49,12 +49,12 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		log.Error("Failed to send request", log.ErrorField(err))
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+	defer func(resp *http.Response) {
+		err = resp.Body.Close()
 		if err != nil {
 			log.Error("Failed to close response body", log.ErrorField(err))
 		}
-	}(resp.Body)
+	}(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		log.Info("No response", log.AnyField("code", resp.StatusCode))

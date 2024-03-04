@@ -70,13 +70,13 @@ func (r *OrderRepository) AddOrderForUser(ctx context.Context, order entity.Orde
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == "23505" {
-				var dbUserUUid uuid.UUID
-				err = r.db.QueryRow(ctx, `SELECT user_uuid FROM orders WHERE number = $1`, order.Number).Scan(&dbUserUUid)
+				var dbUserUUID uuid.UUID
+				err = r.db.QueryRow(ctx, `SELECT user_uuid FROM orders WHERE number = $1`, order.Number).Scan(&dbUserUUID)
 				if err != nil {
 					log.Info("Unknown error", log.ErrorField(err))
 					return fmt.Errorf("%s: %w", op, err)
 				}
-				if dbUserUUid == order.UserUUID {
+				if dbUserUUID == order.UserUUID {
 					log.Info("Order already uploaded from current user")
 					return entity.ErrOrderAlreadyUploaded
 				} else {

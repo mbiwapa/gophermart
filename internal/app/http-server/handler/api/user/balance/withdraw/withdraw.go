@@ -80,7 +80,7 @@ func New(log *logger.Logger, executor BalanceOperationExecutor, authorizer UserA
 			return
 		}
 
-		if luna.Valid(orderNumber) == false {
+		if !luna.Valid(orderNumber) {
 			logWith.Info("Invalid order number", log.AnyField("order_id", request.OrderNumber))
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			return
