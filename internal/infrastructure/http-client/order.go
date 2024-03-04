@@ -64,9 +64,9 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		if resp.StatusCode == http.StatusTooManyRequests {
 			return nil, entity.ErrExternalOrderRateLimitExceeded
 		}
-		if resp.StatusCode == http.StatusNotFound {
-			return nil, entity.ErrExternalOrderNotRegistered
-		}
+		//if resp.StatusCode == http.StatusNotFound {
+		//	return nil, entity.ErrExternalOrderNotRegistered
+		//}
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 

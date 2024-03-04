@@ -40,7 +40,7 @@ func MustLoadConfig() *Config {
 	if envDB != "" {
 		config.DB = envDB
 	}
-	envAccrualAdr := os.Getenv("ACCRUAL_ADDR")
+	envAccrualAdr := os.Getenv("ACCRUAL_SYSTEM_ADDRESS")
 	if envAccrualAdr != "" {
 		config.AccrualAdr = envAccrualAdr
 	}
