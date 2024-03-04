@@ -81,8 +81,7 @@ func (c *OrderClient) Check(ctx context.Context, number int) (entity.Order, erro
 	log := c.logger.With(c.logger.StringField("op", op))
 
 	stringNumber := fmt.Sprintf("%d", number)
-	path := c.url + "/api/orders/" + stringNumber
-	log.Info("Send request", log.StringField("path", path))
+	path := "/api/orders/" + stringNumber
 	bodyBytes, err := c.get(ctx, path)
 	if err != nil {
 		return entity.Order{}, err

@@ -3,6 +3,7 @@ package orders
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -131,8 +132,26 @@ func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAut
 			return
 		}
 
-		render.JSON(w, r, orders)
+		result := make([]GetAllResponse, 0, len(orders))
+		for _, t := range orders {
+			order := GetAllResponse{
+				Number:     fmt.Sprintf("%d", t.Number),
+				Status:     string(t.Status),
+				Accrual:    t.Accrual,
+				UploadedAt: t.UploadedAt.Format(time.RFC3339),
+			}
+			result = append(result, order)
+		}
+
+		render.JSON(w, r, result)
 		logWith.Info("Orders successfully retrieved")
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+type GetAllResponse struct {
+	Number     string  `json:"number"`
+	Status     string  `json:"status"`
+	Accrual    float64 `json:"accrual,omitempty"`
+	UploadedAt string  `json:"uploaded_at"`
 }
