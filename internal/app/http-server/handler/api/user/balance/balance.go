@@ -28,9 +28,19 @@ type UserAuthorizer interface {
 	Authorize(ctx context.Context, token string) (*entity.User, error)
 }
 
-//TODO swag documentation
-
 // New  returned func for getting an balance from the user.
+//
+//	@Tags			Balance
+//	@Summary		Получение баланса пользователя.
+//	@Description	Эндпоинт используется для получения текущего балaнаса пользователя.
+//	@Description	В заголовке Authorization необходимо передавать JWT токен.
+//	@Produce		json
+//	@Accept			plain
+//	@Router			/user/balance [get]
+//	@Param			Authorization	header		string				true	"JWT Token"
+//	@Success		200				{object}	balance.Response	"User balance successfully returned"
+//	@Failure		401				"User is not authorized"
+//	@Failure		500				"Internal server error"
 func New(log *logger.Logger, getter UserBalanceGetter, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.balance.New"
@@ -57,9 +67,19 @@ func New(log *logger.Logger, getter UserBalanceGetter, authorizer UserAuthorizer
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		result := Response{
+			Current:  balance.Current,
+			Withdraw: balance.Withdraw,
+		}
 
-		render.JSON(w, r, balance)
+		render.JSON(w, r, result)
 		logWith.Info("Balance fetched")
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// Response is a response for getting an balance from the user.
+type Response struct {
+	Current  float64 `json:"current" example:"500.5"`
+	Withdraw float64 `json:"withdrawn,omitempty" example:"42"`
 }

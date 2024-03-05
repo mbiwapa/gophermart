@@ -31,9 +31,24 @@ type UserAuthorizer interface {
 	Authorize(ctx context.Context, token string) (*entity.User, error)
 }
 
-//TODO swag documentation
-
 // NewAdder  returned func for adding a new order to the user.
+//
+//	@Tags			Order
+//	@Summary		Добавление нового заказа для начисления средств
+//	@Description	Эндпоинт используется для добавления нового заказа для начисления средств.
+//	@Description	В заголовке Authorization необходимо передавать JWT токен.
+//	@Accept			plain
+//	@Produce		plain
+//	@Router			/api/user/orders [post]
+//	@Param			Authorization	header	string	true	"JWT Token"
+//	@Param			Order			body	integer	true	"Order Number"	example(123124551)
+//	@Success		200				"Order already added from current user"
+//	@Success		202				"Order successfully added to process"
+//	@Failure		400				"Invalid request"
+//	@Failure		401				"User is not authorized"
+//	@Failure		409				"Order already added from another user"
+//	@Failure		422				"Order number is not valid"
+//	@Failure		500				"Internal server error"
 func NewAdder(log *logger.Logger, adder OrderAdder, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.orders.NewAdder"
@@ -98,9 +113,26 @@ type AllOrdersGetter interface {
 	GetAll(ctx context.Context, userUUID uuid.UUID) ([]entity.Order, error)
 }
 
-//TODO swag documentation
-
 // NewAllGetter  returned func for getting all orders from the user.
+//
+//	@Tags			Order
+//	@Summary		Получение списка загруженных заказов
+//	@Description	Эндпоинт для получение списка загруженных номеров заказов и информации по ним
+//	@Description	В заголовке Authorization необходимо передавать JWT токен.
+//	@Description	Номера заказа в выдаче должны быть отсортированы по времени загрузки от самых старых к самым новым. Формат даты — RFC3339.
+//	@Description	Доступные статусы обработки расчётов:
+//	@Description	NEW — заказ загружен в систему, но не попал в обработку;
+//	@Description	PROCESSING — вознаграждение за заказ рассчитывается;
+//	@Description	INVALID — система расчёта вознаграждений отказала в расчёте;
+//	@Description	PROCESSED — данные по заказу проверены и информация о расчёте успешно
+//	@Accept			plain
+//	@Produce		json
+//	@Router			/api/user/orders [get]
+//	@Param			Authorization	header		string				true	"JWT Token"
+//	@Success		200				{object}	[]orders.Response	"Successfully fetched orders"
+//	@Success		204				"No content"
+//	@Failure		401				"User is not authorized"
+//	@Failure		500				"Internal server error"
 func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.orders.NewAllGetter"
@@ -132,9 +164,9 @@ func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAut
 			return
 		}
 
-		result := make([]GetAllResponse, 0, len(orders))
+		result := make([]Response, 0, len(orders))
 		for _, t := range orders {
-			order := GetAllResponse{
+			order := Response{
 				Number:     fmt.Sprintf("%d", t.Number),
 				Status:     string(t.Status),
 				Accrual:    t.Accrual,
@@ -149,9 +181,10 @@ func NewAllGetter(log *logger.Logger, getter AllOrdersGetter, authorizer UserAut
 	}
 }
 
-type GetAllResponse struct {
-	Number     string  `json:"number"`
-	Status     string  `json:"status"`
-	Accrual    float64 `json:"accrual,omitempty"`
-	UploadedAt string  `json:"uploaded_at"`
+// Response is an order response.
+type Response struct {
+	Number     string  `json:"number" example:"123124551"`
+	Status     string  `json:"status" example:"PROCESSING" enums:"NEW,PROCESSING,INVALID,PROCESSED"`
+	Accrual    float64 `json:"accrual,omitempty" example:"500"`
+	UploadedAt string  `json:"uploaded_at" example:"2020-12-10T15:15:45+03:00"`
 }

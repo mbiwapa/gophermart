@@ -30,9 +30,20 @@ type UserAuthorizer interface {
 	Authorize(ctx context.Context, token string) (*entity.User, error)
 }
 
-//TODO swag doc
-
 // New  returned func for showing user's withdrawal operations.
+//
+//	@Tags			Balance
+//	@Summary		Получение списка операций снятия баланса.
+//	@Description	Эндпоинт используется для получения списка операций снятия баланса пользователя
+//	@Description	В заголовке Authorization необходимо передавать JWT токен.
+//	@Produce		json
+//	@Accept			plain
+//	@Router			/api/user/withdrawals [get]
+//	@Param			Authorization	header		string					true	"JWT Token"
+//	@Success		200				{object}	[]withdrawals.Response	"User balance successfully returned"
+//	@Success		204				"No withdrawal operations found"
+//	@Failure		401				"User is not authorized"
+//	@Failure		500				"Internal server error"
 func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.withdrawals.New"
@@ -82,7 +93,7 @@ func New(log *logger.Logger, getter BalanceWithdrawOperationGetter, authorizer U
 
 // Response is a response for showing user's withdrawal operations
 type Response struct {
-	Withdrawal  float64 `json:"sum" validate:"required" example:"100"`
-	OrderNumber string  `json:"order" validate:"required" example:"12312455"`
-	ProcessedAt string  `json:"processed_at" validate:"required" example:"2020-12-10T15:15:45+03:00"`
+	Withdrawal  float64 `json:"sum" example:"100"`
+	OrderNumber string  `json:"order" example:"12312455"`
+	ProcessedAt string  `json:"processed_at" example:"2020-12-10T15:15:45+03:00"`
 }

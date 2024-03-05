@@ -8,18 +8,18 @@ import (
 )
 
 type Balance struct {
-	UserUUID uuid.UUID `json:"-"`
-	Current  float64   `json:"current" example:"500.5"`
-	Withdraw float64   `json:"withdrawn,omitempty" example:"42"`
+	UserUUID uuid.UUID
+	Current  float64
+	Withdraw float64
 }
 
 type BalanceOperation struct {
-	UUID        uuid.UUID `json:"-"`
-	UserUUID    uuid.UUID `json:"-"`
-	Accrual     float64   `json:"-"`
-	Withdrawal  float64   `json:"sum" validate:"required" example:"100"`
-	OrderNumber int       `json:"order" validate:"required" example:"12312455"`
-	ProcessedAt time.Time `json:"processed_at" validate:"required" example:"2020-12-10T15:15:45+03:00"`
+	UUID        uuid.UUID
+	UserUUID    uuid.UUID
+	Accrual     float64
+	Withdrawal  float64
+	OrderNumber int
+	ProcessedAt time.Time
 }
 
 var (

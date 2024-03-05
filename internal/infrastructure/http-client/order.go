@@ -49,7 +49,7 @@ func (c *OrderClient) get(ctx context.Context, path string) ([]byte, error) {
 		log.Error("Failed to send request", log.ErrorField(err))
 		return nil, err
 	}
-
+	//TODO это должно быть в другом методе, это просто трансопрт
 	if resp.StatusCode != http.StatusOK {
 		log.Info("No response", log.AnyField("code", resp.StatusCode))
 		if resp.StatusCode == http.StatusNoContent {

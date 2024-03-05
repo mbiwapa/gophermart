@@ -38,6 +38,23 @@ type Request struct {
 }
 
 // New  returned func for withdrawing money from the user's balance.
+//
+//	@Tags			Balance
+//	@Summary		Cнятие средств с баланса пользователя в пользу заказа
+//	@Description	Эндпоинт используется для снятия средств с баланса пользователя в пользу заказа
+//	@Description	В заголовке Authorization необходимо передавать JWT токен.
+//	@Accept			json
+//	@Produce		plain
+//	@Router			/user/balance/withdraw [post]
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header	string				true	"JWT Token"
+//	@Param			Request			body	withdraw.Request	true	"Withdraw Request"
+//	@Success		200				"Withdrawal request successfully sent"
+//	@Failure		401				"User is not authorized"
+//	@Failure		402				"Balance is insufficient"
+//	@Failure		422				"Order number is not valid"
+//	@Failure		400				"Invalid request"
+//	@Failure		500				"Internal server error"
 func New(log *logger.Logger, executor BalanceOperationExecutor, authorizer UserAuthorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.balance.withdraw.New"

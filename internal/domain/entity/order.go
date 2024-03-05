@@ -20,13 +20,11 @@ const (
 
 // Order is an entity for managing orders.
 type Order struct {
-	Number  int     `json:"number" example:"123124551"`
-	Status  Status  `json:"status" example:"PROCESSING"`
-	Accrual float64 `json:"accrual,omitempty" example:"500"`
-	// ignore in json
-	UserUUID uuid.UUID `json:"-"`
-	//time format RFC3339
-	UploadedAt time.Time `json:"uploaded_at" example:"2020-12-10T15:15:45+03:00"`
+	Number     int
+	Status     Status
+	Accrual    float64
+	UserUUID   uuid.UUID
+	UploadedAt time.Time
 }
 
 var (

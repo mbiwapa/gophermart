@@ -31,19 +31,20 @@ type Request struct {
 
 // New returned func for logging in a user.
 //
+//	@Tags			User
 //	@Summary		Аутентификация пользователя.
 //	@Description	Эндпоинт используется для аутентификации пользователя.
 //	@Description	Логин приводится к нижнему регистру на стороне сервера
 //	@Description	В заголовке Authorization возвращается JWT токен для авторизации
 //	@Accept			json
+//	@Produce		plain
 //	@Router			/user/login [post]
-//	@Param			login		body	login.Request	true	"Login of the user"
-//	@Param			password	body	login.Request	true	"Password of the user"
-//	@Success		200			"User successfully authenticated"
-//	@Failure		401			"Login or password is wrong"
-//	@Failure		400			"Bad request"
-//	@Failure		500			"Internal server error"
-//	@Header			200			{string}	Authorization	"token"
+//	@Param			Request	body	login.Request	true	"Login Request"
+//	@Success		200		"User successfully authenticated"
+//	@Failure		401		"Login or password is wrong"
+//	@Failure		400		"Bad request"
+//	@Failure		500		"Internal server error"
+//	@Header			200		{string}	Authorization	"JWT Token"
 func New(log *logger.Logger, service UserAuthenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.login.New"
