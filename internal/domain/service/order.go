@@ -66,12 +66,6 @@ func (s *OrderService) Add(ctx context.Context, orderNumber int, userUUID uuid.U
 
 // GetAll returns all orders for a user.
 func (s *OrderService) GetAll(ctx context.Context, userUUID uuid.UUID) ([]entity.Order, error) {
-	//const op = "domain.services.OrderService.GetAll"
-	//log := s.logger.With(
-	//	s.logger.StringField("op", op),
-	//	s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
-	//)
-
 	orders, err := s.repository.GetAllUserOrders(ctx, userUUID)
 	if err != nil {
 		return nil, err

@@ -74,12 +74,6 @@ func (s *BalanceService) Execute(ctx context.Context, operation entity.BalanceOp
 
 // GetWithdrawOperations returns all withdrawal operations for a user.
 func (s *BalanceService) GetWithdrawOperations(ctx context.Context, userUUID uuid.UUID) ([]entity.BalanceOperation, error) {
-	//const op = "domain.services.BalanceService.GetOperations"
-	//log := s.logger.With(
-	//	s.logger.StringField("op", op),
-	//	s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
-	//)
-
 	operations, err := s.repository.GetWithdrawOperations(ctx, userUUID)
 	if err != nil {
 		return nil, err
@@ -88,12 +82,6 @@ func (s *BalanceService) GetWithdrawOperations(ctx context.Context, userUUID uui
 }
 
 func (s *BalanceService) CreateBalanceForUser(ctx context.Context, userUUID uuid.UUID) error {
-	//const op = "domain.services.BalanceService.CreateBalanceForUser"
-	//log := s.logger.With(
-	//    s.logger.StringField("op", op),
-	//    s.logger.StringField("request_id", contexter.GetRequestID(ctx)),
-	//)
-
 	err := s.repository.CreateBalance(ctx, userUUID)
 	if err != nil {
 		return err
