@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -21,19 +22,26 @@ type UserRepository interface {
 	GetUserByUUID(ctx context.Context, userUUID uuid.UUID) (*entity.User, error)
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=BalanceCreator
+type BalanceCreator interface {
+	CreateBalanceForUser(ctx context.Context, userUUID uuid.UUID) error
+}
+
 // UserService is a service for managing users.
 type UserService struct {
-	repository UserRepository
-	secretKey  string
-	logger     *logger.Logger
+	repository     UserRepository
+	secretKey      string
+	logger         *logger.Logger
+	balanceService BalanceCreator
 }
 
 // NewUserService returns a new user service.
-func NewUserService(repository UserRepository, logger *logger.Logger, secretKey string) *UserService {
+func NewUserService(repository UserRepository, balanceService BalanceCreator, logger *logger.Logger, secretKey string) *UserService {
 	return &UserService{
-		repository: repository,
-		secretKey:  secretKey,
-		logger:     logger,
+		repository:     repository,
+		secretKey:      secretKey,
+		logger:         logger,
+		balanceService: balanceService,
 	}
 }
 
@@ -58,6 +66,12 @@ func (s *UserService) Register(ctx context.Context, login, password string) (str
 		return "", err
 	}
 
+	err = s.balanceService.CreateBalanceForUser(ctx, user.UUID)
+	if err != nil {
+		return "", err
+	}
+	log.Info("User balance created")
+
 	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
 	if err != nil {
 		log.Error("Failed to create JWT", log.ErrorField(err))
@@ -76,13 +90,16 @@ func (s *UserService) Authenticate(ctx context.Context, login, password string) 
 
 	user, err := s.repository.GetUserByLogin(ctx, login)
 	if err != nil {
+		if errors.Is(err, entity.ErrUserNotFound) {
+			return "", entity.ErrUserWrongPasswordOrLogin
+		}
 		return "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		log.Error("Wrong password", log.ErrorField(err))
-		return "", entity.ErrUserWrongPassword
+		log.Info("Wrong password", log.ErrorField(err))
+		return "", entity.ErrUserWrongPasswordOrLogin
 	}
 
 	jwtString, err := tool.CreateJWT(user.UUID, s.secretKey)
@@ -103,7 +120,7 @@ func (s *UserService) Authorize(ctx context.Context, token string) (*entity.User
 
 	userUUID, err := tool.CheckJWT(token, s.secretKey)
 	if err != nil || userUUID == uuid.Nil {
-		log.Error("Invalid JWT", log.ErrorField(err))
+		log.Info("Invalid JWT", log.ErrorField(err))
 		return nil, err
 	}
 

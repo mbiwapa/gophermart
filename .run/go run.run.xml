@@ -2,6 +2,7 @@
   <configuration default="false" name="go run" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="gophermart" />
     <working_directory value="$PROJECT_DIR$" />
+    <parameters value="-r=http://localhost:8080 -a=localhost:8081" />
     <kind value="PACKAGE" />
     <package value="github.com/mbiwapa/gophermart.git/cmd/gophermart" />
     <directory value="$PROJECT_DIR$" />
