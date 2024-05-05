@@ -31,24 +31,25 @@ type Request struct {
 
 // New returned func for registering a new user.
 //
+//	@Tags			User
 //	@Summary		Регистрация нового пользователя.
 //	@Description	Эндпоинт используется для регистрации нового пользователя.
 //	@Description	Логин приводится к нижнему регистру на стороне сервера
 //	@Description	В заголовке Authorization возвращается JWT токен авторизации
 //	@Accept			json
+//	@Produce		plain
 //	@Router			/user/register [post]
-//	@Param			login		body	register.Request	true	"Login of the user"
-//	@Param			password	body	register.Request	true	"Password of the user"
-//	@Success		200			"User registered successfully"
-//	@Failure		409			"User already exists"
-//	@Failure		400			"Bad request"
-//	@Failure		500			"Internal server error"
-//	@Header			200			{string}	Authorization	"token"
+//	@Param			Request	body	register.Request	true	"Register Request"
+//	@Success		200		"User registered successfully"
+//	@Failure		409		"User already exists"
+//	@Failure		400		"Bad request"
+//	@Failure		500		"Internal server error"
+//	@Header			200		{string}	Authorization	"JWT Token"
 func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "app.http-server.handler.api.user.register.New"
 
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		reqID := middleware.GetReqID(ctx)
@@ -61,7 +62,7 @@ func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
 		var req Request
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
-			logWith.Error("Failed to decode request body", log.ErrorField(err))
+			logWith.Info("Failed to decode request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -70,7 +71,7 @@ func New(log *logger.Logger, service UserRegistrar) http.HandlerFunc {
 		logWith.Info("Request decoded", log.AnyField("login", req.Login))
 
 		if err := validator.New().Struct(req); err != nil {
-			logWith.Error("Failed to validate request body", log.ErrorField(err))
+			logWith.Info("Failed to validate request body", log.ErrorField(err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

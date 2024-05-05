@@ -7,15 +7,17 @@ import (
 
 // Config Структура со всеми конфигурациями сервера
 type Config struct {
-	Addr      string
-	DB        string
-	SecretKey string
+	Addr       string
+	DB         string
+	SecretKey  string
+	AccrualAdr string
 }
 
 // MustLoadConfig загрузка конфигурации
 func MustLoadConfig() *Config {
 	var config Config
-	flag.StringVar(&config.Addr, "a", "localhost:8080", "Адрес порт сервера")
+	config.SecretKey = "22gwiT5#eQxdh89OJZM-9af=LDB^EIJsW7Bbv90s1L^U.O7jNu8OrEhWLM.zJFUk"
+	flag.StringVar(&config.Addr, "a", "localhost:8081", "Адрес порт сервера")
 	flag.StringVar(
 		&config.DB,
 		"d",
@@ -23,10 +25,10 @@ func MustLoadConfig() *Config {
 		"DSN строка для соединения с базой данных",
 	)
 	flag.StringVar(
-		&config.SecretKey,
-		"k",
-		"22gwiT5#eQxdh89OJZM-9af=LDB^EIJsW7Bbv90s1L^U.O7jNu8OrEhWLM.zJFUk",
-		"Секретный ключ для хеширования пароля",
+		&config.AccrualAdr,
+		"r",
+		"http://localhost:8080",
+		"Адрес системы расчёта начислений",
 	)
 	flag.Parse()
 
@@ -38,9 +40,9 @@ func MustLoadConfig() *Config {
 	if envDB != "" {
 		config.DB = envDB
 	}
-	envSecretKey := os.Getenv("SECRET_KEY")
-	if envSecretKey != "" {
-		config.SecretKey = envSecretKey
+	envAccrualAdr := os.Getenv("ACCRUAL_SYSTEM_ADDRESS")
+	if envAccrualAdr != "" {
+		config.AccrualAdr = envAccrualAdr
 	}
 
 	return &config
